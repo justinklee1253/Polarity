@@ -147,10 +147,3 @@ def login():
         current_app.logger.error(f"Login error: {str(e)}")
         return jsonify({"error": "Login failed"}), 500
         
-
-
-    #get credentials/define request
-    #from the request, we want to take the attributes ("email/username") or password 
-    #Check these credentials against db 
-    #if match found --> generate jwt, assign to user and send them to protected route (onboarding)
-    #if no match --> return error

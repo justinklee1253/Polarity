@@ -32,10 +32,8 @@ def test_db_connection(): #testing connection via sqlalchemy
 def get_db_session():
     db = SessionLocal()
     try:
-        yield db #use single session for each request, creating new session every time 
-        #returning here --> would close the db and return a closed db object
-        #yield --> finally code block executed after request has been processed by backend and response has BEEN SENT
-        db.commit() #confirm changes user made to db --> makes sure changes reflected in db
+        yield db 
+        db.commit() 
     except Exception:
         db.rollback()
         raise
