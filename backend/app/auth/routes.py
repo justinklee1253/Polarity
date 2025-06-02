@@ -22,6 +22,20 @@ auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 def contains_special_char(s):
     return any(char in string.punctuation for char in s)
 
+def validate_password(password):
+    errors = []
+    if len(password) < 8:
+        errors.append("Password must be at least 8 characters")
+    if not any(c.isupper() for c in password):
+        errors.append("Password must contain at least 1 uppercase letter")
+    if not any(c.islower() for c in password):
+        errors.append("Password must contain at least 1 lowercase letter")
+    if not any(c.isdigit() for c in password):
+        errors.append("Password must contain at least one number")
+    if not contains_special_char(password):
+        errors.append("Password must contain at least one special character")
+    return errors
+
 def validate_signup_data(data):
     errors = []
     username = data.get('username')
@@ -33,23 +47,14 @@ def validate_signup_data(data):
     email = data.get('email', '').strip()
     if not email:
         errors.append("Email is required")
-    elif '@' not in email:
+    elif '@' not in email or '.' not in email:
         errors.append("Invalid email format")
     
     password = data.get('password')
     if not password:
-        errors.append("Password not found")
+        errors.append("Password is required")
     else:
-        if len(password) < 8:
-            errors.append("Password must be at least 8 characters")
-        if not any(c.isupper() for c in password):
-            errors.append("Password must contain at least 1 uppercase letter")
-        if not any(c.islower() for c in password):
-            errors.append("Password must contain at least 1 lowercase character")
-        if not any(c.isdigit() for c in password):
-            errors.append("Password must contain at least one number")
-        if not contains_special_char(password):
-            errors.append("Password must contain at least one special character")
+        errors.extend(validate_password(password))
 
     return errors
 

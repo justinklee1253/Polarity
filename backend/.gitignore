@@ -56,3 +56,6 @@ Thumbs.db
 gitignore
 /backend/gitignore
 .backend/gitignore
+
+__pycache__/
+*.py[cod]
