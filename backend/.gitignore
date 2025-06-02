@@ -49,3 +49,10 @@ Thumbs.db
 .idea/
 .vscode/
 *.swp
+
+/backend/jwt_token.py
+.backend/jwt_token.py
+.gitignore
+gitignore
+/backend/gitignore
+.backend/gitignore

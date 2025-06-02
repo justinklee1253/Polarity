@@ -2,6 +2,7 @@ from flask import Flask
 from .config import Config
 from .database import test_db_connection
 from dotenv import load_dotenv
+from flask_jwt_extended import JWTManager
 
 def create_app():
     """
@@ -14,6 +15,8 @@ def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
 
+    jwt = JWTManager(app)
+
     test_db_connection()
 
     from .routes import main_bp
@@ -24,5 +27,5 @@ def create_app():
 
     return app
 
-app = create_app()
+
 

@@ -5,3 +5,4 @@ sqlalchemy
 alembic
 bcrypt
 pyjwt
+flask-jwt-extended

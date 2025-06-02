@@ -11,8 +11,10 @@ load_dotenv()
 
 SQLALCHEMY_DATABASE_URL = os.getenv('DATABASE_URL')
 
+print(f"Database URL: {SQLALCHEMY_DATABASE_URL}") #DEBUG LINE
+
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine) #allows the Session factory to be used by multiple functions
 
 Base = declarative_base() #set up blueprint for building --> every model needs to extend from it so SQLAlchemy knows how to wire up walls
 #Base holds metadata needed for SQLAlchemy to map python classes to actual sql tables
@@ -31,7 +33,9 @@ def get_db_session():
     db = SessionLocal()
     try:
         yield db #use single session for each request, creating new session every time 
-        db.commit()
+        #returning here --> would close the db and return a closed db object
+        #yield --> finally code block executed after request has been processed by backend and response has BEEN SENT
+        db.commit() #confirm changes user made to db --> makes sure changes reflected in db
     except Exception:
         db.rollback()
         raise
