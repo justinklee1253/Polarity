@@ -124,7 +124,7 @@ How it works:
 
 ## 🔐 Security Notes
 
-- All dashboard/backend routes are JWT- or cookie-protected.
+- All dashboard/backend routes are JWT- or cookie-protected (@jwt_required())
 - Refresh token stored securely as `HttpOnly` cookie.
 - Frontend prevents dashboard access until onboarding is complete.
 
