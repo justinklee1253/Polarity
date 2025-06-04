@@ -10,7 +10,7 @@ import string
 import jwt
 import uuid
 from flask import Blueprint, request, jsonify, current_app, make_response
-from flask_jwt_extended import create_access_token, create_refresh_token, get_jwt, jwt_required
+from flask_jwt_extended import create_access_token, create_refresh_token, get_jwt, jwt_required, get_jwt_identity
 from datetime import datetime, timedelta
 import sys
 import os
@@ -166,3 +166,33 @@ def logout():
     except Exception as e:
         current_app.logger.error(f"Logout error: {str(e)}")
         return jsonify({"error": "Logout failed"}), 500
+    
+@auth_bp.route('/user', methods=['GET'])
+@jwt_required()
+def get_current_user():
+    user_id = get_jwt_identity() #returns identity of JWT accessing this endpoint. 
+    
+    with get_db_session() as db:
+        user = db.query(User).get(user_id)
+        if not user:
+            return jsonify({"message": "User not found"}), 404
+        
+        onboarding_complete = all([ #returns true if all elements in iterable are true. 
+            user.salary_monthly,
+            user.total_balance, 
+            user.monthly_spending_goal,
+        ])
+
+        return jsonify({
+            "user_id": user.id,
+            "name": user.name,
+            "username": user.username,
+            "email": user.email,
+            "onboarding_complete": onboarding_complete,
+            "budget_profile": {
+                "salary_monthly": user.salary_monthly,
+                "monthly_spending_goal": user.monthly_spending_goal,
+                "total_balance": user.total_balance,
+            }
+
+        }), 200
