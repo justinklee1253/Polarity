@@ -4,7 +4,7 @@ import psycopg2
 from dotenv import load_dotenv
 from contextlib import contextmanager
 from sqlalchemy import create_engine, text #engine = starting point for SQLAlchemy app
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import sessionmaker
 
 load_dotenv()

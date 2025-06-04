@@ -1,6 +1,31 @@
 import pytest
+from ..app import create_app
 
 #Auth functions + routes 
+@pytest.fixture
+def client():
+    app = create_app()
+    app.config["TESTING"] = True
+    with app.test_client() as client:
+        yield client
+
+@pytest.fixture
+def valid_request_data_for_signup():
+   return {
+    "username": "winter_soldier",
+    "email": "bucky@hydra.org",
+    "password": "BuckyBarnes99!",
+    "name": "Bucky",
+    "age": 105,
+    "monthly_spending_goal": 1000,
+    "salary_monthly": 5000,
+    "total_balance": 15000
+}
+   
+    
+        
+    
+
 @pytest.fixture
 def test_strings():
     return {

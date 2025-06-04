@@ -1,8 +1,11 @@
-from flask import Flask
+from flask import Flask, jsonify
 from .config import Config
 from .database import test_db_connection
 from dotenv import load_dotenv
 from flask_jwt_extended import JWTManager
+from .extensions import blacklist
+
+blacklist = set()
 
 def create_app():
     """
@@ -16,6 +19,16 @@ def create_app():
     app.config.from_object(Config)
 
     jwt = JWTManager(app)
+
+    #register blacklist loader
+    @jwt.token_in_blocklist_loader
+    def check_if_token_revoked(jwt_header, jwt_payload):
+        jti = jwt_payload["jti"] #jti = unique identifer for JWT
+        return jti in blacklist
+
+    @jwt.revoked_token_loader
+    def revoked_token_callback(jwt_header, jwt_payload):
+        return jsonify({"error": "Token has been revoked"}), 401
 
     test_db_connection()
 

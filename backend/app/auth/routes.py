@@ -10,12 +10,13 @@ import string
 import jwt
 import uuid
 from flask import Blueprint, request, jsonify, current_app, make_response
-from flask_jwt_extended import create_access_token, create_refresh_token, get_jwt
+from flask_jwt_extended import create_access_token, create_refresh_token, get_jwt, jwt_required
 from datetime import datetime, timedelta
 import sys
 import os
 from ..database import get_db_session
 from ..models import User
+from ..extensions import blacklist
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 
@@ -151,4 +152,17 @@ def login():
     except Exception as e:
         current_app.logger.error(f"Login error: {str(e)}")
         return jsonify({"error": "Login failed"}), 500
-        
+
+
+@auth_bp.route('/logout', methods=['POST'])
+@jwt_required(refresh=True)
+def logout():
+    try:
+        jti = get_jwt()["jti"]
+        blacklist.add(jti)
+        response = jsonify({"message": "Successfully logged out"})
+        response.delete_cookie("refresh_token") 
+        return response, 200
+    except Exception as e:
+        current_app.logger.error(f"Logout error: {str(e)}")
+        return jsonify({"error": "Logout failed"}), 500
