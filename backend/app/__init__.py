@@ -1,4 +1,5 @@
 from flask import Flask, jsonify
+from flask_cors import CORS
 from .config import Config
 from .database import test_db_connection
 from dotenv import load_dotenv
@@ -17,6 +18,24 @@ def create_app():
     """
     app = Flask(__name__)
     app.config.from_object(Config)
+
+    CORS(app, 
+         origins=[
+             "http://localhost:5173", #localhost dev server
+         ],
+         supports_credentials=True, 
+         allow_headers=[
+             "Content-Type",
+             "Authorization",
+             "Access-Control-Allow-Credentials",
+             "Access-Control-Allow-Origin",
+             "Access-Control-Allow-Headers", 
+             "Access-Control-Allow-Methods"  
+             
+         ],
+         methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+         expose_headers=["Content-Type", "Authorization"]
+         )
 
     jwt = JWTManager(app)
 

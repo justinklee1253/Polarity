@@ -1,11 +1,16 @@
 import { toast as sonnerToast } from "sonner";
 
-export const toast = {
-  success: (message) => sonnerToast.success(message),
-  error: (message) => sonnerToast.error(message),
-  info: (message) => sonnerToast.info(message),
-  warning: (message) => sonnerToast.warning(message),
-  default: (message) => sonnerToast(message),
+export const toast = ({ title, description, variant }) => {
+  const message = title + (description ? `: ${description}` : "");
+
+  switch (variant) {
+    case "destructive":
+      return sonnerToast.error(message);
+    case "success":
+      return sonnerToast.success(message);
+    default:
+      return sonnerToast(message);
+  }
 };
 
 export const useToast = () => {

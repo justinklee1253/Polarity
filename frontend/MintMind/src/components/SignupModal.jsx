@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { apiService } from "@/services/api";
 
 function SignupModal({ isOpen, onClose }) {
   const [formData, setFormData] = useState({
@@ -21,8 +22,8 @@ function SignupModal({ isOpen, onClose }) {
     password: "",
     confirmPassword: "",
   });
-  const [isLoading, setIsLoading] = useState(false);
-  const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false); //?
+  const navigate = useNavigate(); //?
 
   const handleChange = (e) => {
     setFormData((prev) => ({
@@ -46,19 +47,52 @@ function SignupModal({ isOpen, onClose }) {
     setIsLoading(true);
 
     try {
-      console.log("Signup attempt:", formData);
+      const signupData = {
+        username: formData.username.trim(),
+        email: formData.email.trim().toLowerCase(),
+        password: formData.password,
+        name: `${formData.firstName.trim()} ${formData.lastName.trim()}`,
+      };
 
-      // Simulate API call - replace with your actual auth API
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      console.log("Sending signup data:", {
+        ...signupData,
+        password: "[HIDDEN]",
+      });
+
+      //API Call
+
+      const { data } = await apiService.signup(signupData);
 
       toast({
         title: "Account created successfully!",
         description: "Welcome to MintMind! You're now signed in.",
       });
 
+      //Reset sign up form
+      setFormData({
+        firstName: "",
+        lastName: "",
+        email: "",
+        username: "",
+        password: "",
+        confirmPassword: "",
+      });
+
       onClose();
-      navigate("/dashboard");
     } catch (error) {
+      console.error("Signup error:", error);
+
+      let errorMessage = "Something went wrong. Please try again.";
+
+      if (error.message.includes("User already exists")) {
+        errorMessage = "An account with this email or username already exists.";
+      } else if (error.message.includes("Password must")) {
+        errorMessage = error.message; // Show password validation errors directly
+      } else if (Array.isArray(error.message)) {
+        // Handle array of validation errors from backend
+        errorMessage = error.message.join(". ");
+      }
+
       toast({
         title: "Signup failed",
         description: "Something went wrong. Please try again.",
