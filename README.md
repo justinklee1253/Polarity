@@ -88,8 +88,9 @@ How it works:
 | POST | `/api/auth/login` | Authenticate |
 | GET  | `/api/auth/user` | Get current user |
 | POST | `/api/auth/logout` | Logout |
+| POST | `/api/auth/refresh` | Automate access_token generation when expired |
 
-### 👋 Onboarding
+### 👋 Onboarding 
 
 | Method | Route | Purpose |
 |--------|-------|---------|
