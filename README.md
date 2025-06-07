@@ -27,12 +27,12 @@ Polarity provides:
 
 ## 🚀 MVP Features
 
-- **User Authentication**: Signup/Login with JWT-secured sessions.
-- **Onboarding**: Set initial balance, weekly income, and goals.
+- **User Authentication**: Signup/Login with JWT-secured sessions, with a google sign-in option.
+- **Onboarding**: Set initial balance, weekly income, and goals. Integrated with Plaid API for secure bank account connection.
 - **Transactions**: Add, edit, delete categorized expenses/income.
 - **Dashboard**: Charts and summaries of user finances.
-- **AI Assistant (rudimentary)**: Ask “Can I afford to go out this weekend?” or “Where can I cut costs?”
-- **Persistent Storage**: PostgreSQL (NeonDB) database for user data.
+- **Ask Minty(Personal AI Finance Assistant) **: Ask “Can I afford to go out this weekend?” or “Where can I cut costs?”, implemented via RAG Pipeline connected to dashboard.
+- **Persistent Storage**: PostgreSQL (NeonDB) database for user data for autosacling, performance, reliability
 
 ---
 
