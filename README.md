@@ -1,6 +1,6 @@
-# 🧠 MintMind — Smarter Budgeting for College Students
+# 🧠 Polarity — Smarter Budgeting for College Students
 
-MintMind is a web application that helps college students gain control of their spending by combining traditional budgeting tools with AI-powered financial insights. The app encourages responsible financial behavior through intelligent dashboards, reminders, and a personal budgeting assistant.
+Polarity is a web application that helps college students gain control of their spending by combining traditional budgeting tools with AI-powered financial insights. The app encourages responsible financial behavior through intelligent dashboards, reminders, and a personal budgeting assistant.
 
 ---
 
@@ -16,7 +16,7 @@ College students often struggle with:
 
 ## ✅ Solution
 
-MintMind provides:
+Polarity provides:
 
 - 📊 A visual, mobile-friendly **budget dashboard**.
 - ✍️ Easy input for tracking income and expenses.
@@ -144,5 +144,5 @@ How it works:
 1. Clone the repo:
 
    ```bash
-   git clone https://github.com/yourusername/mintmind.git
-   cd mintmind
+   git clone https://github.com/yourusername/Polarity.git
+   cd Polarity
