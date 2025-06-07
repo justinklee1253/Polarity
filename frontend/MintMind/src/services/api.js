@@ -1,23 +1,68 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-console.log("API_BASE_URL:", API_BASE_URL); // Debug log
-
 class ApiService {
+  constructor() {
+    this.isRefreshing = false; //flag for preventing multiple refresh attempts.
+  }
+
   async request(endpoint, options = {}) {
     const url = `${API_BASE_URL}${endpoint}`; // this is the URL we are going to be making a call to.
-    console.log(`Making request to: `, url); //DEBUG
 
     const config = {
+      //specifying that for all requests made to backend, must be in JSON format, and then additional headers depending on route.
       headers: {
         "Content-Type": "application/json",
         ...options.headers,
       },
+      credentials: "include", //send cookies with request --> for refresh tokenb
       ...options,
     };
 
     try {
       const response = await fetch(url, config); //waiting for the fetch to return a promise
-      const data = await response.json();
+      let data;
+
+      try {
+        data = await response.json();
+      } catch (jsonError) {
+        console.warn("Response is not valid JSON: ", jsonError);
+        data = {};
+      }
+
+      if (
+        response.status === 401 &&
+        endpoint !== "/auth/refresh" &&
+        endpoint !== "/auth/login" &&
+        !this.isRefreshing
+      ) {
+        //if token expired --> refresh
+        this.isRefreshing = true;
+        try {
+          console.log("Attempting token refresh");
+          const refreshResult = await this.refreshToken();
+
+          if (refreshResult.data.access_token) {
+            localStorage.setItem(
+              "access_token",
+              refreshResult.data.access_token
+            );
+
+            config.headers.Authorization = `Bearer ${refreshResult.data.access_token}`;
+            const retryResponse = await fetch(url, config);
+            const retryData = await retryResponse.json();
+
+            this.isRefreshing = false;
+            return { data: retryData, response: retryResponse };
+          }
+        } catch (refreshError) {
+          console.error("Token refresh failed:", refreshError);
+          this.clearAuth();
+          window.location.href = `/login`;
+          throw refreshError;
+        } finally {
+          this.isRefreshing = false;
+        }
+      }
 
       if (!response.ok) {
         throw new Error(data.error || `HTTP error! status: ${response.status}`);
@@ -37,26 +82,74 @@ class ApiService {
   }
 
   async login(credentials) {
-    return this.request("/auth/login", {
-      method: "POST",
-      body: JSON.stringify(credentials),
-    });
+    try {
+      const { data, response } = await this.request("/auth/login", {
+        method: "POST",
+        body: JSON.stringify(credentials),
+      });
+
+      console.log("Login response:", { data, status: response.status });
+
+      if (data.access_token) {
+        localStorage.setItem("access_token", data.access_token);
+        console.log("Access token stored successfully");
+      }
+
+      return { data, response };
+    } catch (error) {
+      console.error("Login failed:", error);
+      throw new Error(error.message || "Login failed");
+    }
   }
 
   async logout() {
-    return this.request("/auth/logout", {
+    const token = localStorage.getItem("access_token");
+    const result = await this.request("/auth/logout", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`, //when logging out, we get access token from LS, then send a request to logout route
+      },
+    });
+
+    //if successful
+    localStorage.removeItem("access_token");
+    return result;
+  }
+
+  async getCurrentUser() {
+    const token = localStorage.getItem("access_token"); //getting the access JWT token from browser's localstorage
+    if (!token) {
+      throw new Error("No access token found");
+    }
+    return this.request("/auth/user", {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  }
+
+  async refreshToken() {
+    if (this.isRefreshing) {
+      throw new Error("Refresh already in progress");
+    }
+
+    return this.request("/auth/refresh", {
       method: "POST",
     });
   }
 
-  async getCurrentUser() {
-    // You'll need to handle JWT token here
-    return this.request("/auth/user", {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-      },
-    });
+  isAuthenticated() {
+    const token = localStorage.getItem("access_token");
+    return !!token;
+  }
+
+  clearAuth() {
+    localStorage.removeItem("access_token");
+  }
+
+  getToken() {
+    return localStorage.getItem("access_token");
   }
 }
 

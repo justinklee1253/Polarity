@@ -71,13 +71,6 @@ function Dashboard() {
             </CardContent>
           </Card>
         </div>
-
-        <div className="mt-8 text-center">
-          <p className="text-gray-600">
-            🎉 Your authentication system is working! Now you can integrate your
-            actual API routes.
-          </p>
-        </div>
       </div>
     </div>
   );

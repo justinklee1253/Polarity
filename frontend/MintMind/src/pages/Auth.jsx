@@ -12,25 +12,29 @@ import {
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 import SignupModal from "@/components/SignupModal";
+import { apiService } from "@/services/api";
+import { Eye, EyeOff } from "lucide-react"; // Import eye icons
 
 function Auth() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showSignup, setShowSignup] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simulate API call - replace with your actual auth API
     try {
-      console.log("Login attempt:", { email, password });
+      const credentials = {
+        [email.includes("@") ? "email" : "username"]: email.trim(),
+        password: password,
+      };
 
-      // Simulate delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
+      console.log(`Login attempt: `, credentials); //REMOVE FOR PROD
+      const result = await apiService.login(credentials);
       toast({
         title: "Login successful!",
         description: "Welcome back to MintMind",
@@ -47,6 +51,10 @@ function Auth() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const togglePasswordVis = () => {
+    setShowPassword(!showPassword);
   };
 
   return (
@@ -95,15 +103,29 @@ function Auth() {
                 >
                   Password
                 </Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="Enter your password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  className="h-11 border-gray-200 focus:border-sky-500 focus:ring-sky-500 transition-colors"
-                />
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Enter your password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    className="h-11 border-gray-200 focus:border-sky-500 focus:ring-sky-500 transition-colors"
+                  />
+                  <button
+                    type="button"
+                    onClick={togglePasswordVis}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors focus:outline-none"
+                    tabIndex={-1}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
               </div>
 
               <Button

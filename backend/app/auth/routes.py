@@ -122,28 +122,30 @@ def login():
             if not password:
                 return jsonify({"error": "Password is required"}), 400
             
-            if email:
-                email = email.strip().lower()
-            if username:
-                username = username.strip()
-            
-            if not email and not username:
+            login_identifier = email or username
+            if not login_identifier:
                 return jsonify({"error": "Email or username required!"}), 400
             
+            login_identifier = login_identifier.strip()
+            if '@' in login_identifier: # If it contains @, treat as email and convert to lowercase
+                login_identifier = login_identifier.lower()
+            
+            
             verified_user = db.query(User).filter(
-                (User.email == email) | (User.username == username)
-            ).first() #check db
+                (User.email == login_identifier) | (User.username == login_identifier)
+            ).first()
 
             if verified_user and bcrypt.checkpw(request_data.get('password').encode('utf-8'), verified_user.password.encode('utf-8')):
                 jwt_access_token = create_access_token(identity=verified_user.id)
                 refresh_token = create_refresh_token(identity=verified_user.id) #allows client to obtain new access tokens without user re-auth
-                resp = make_response(jsonify({"access_token": jwt_access_token}))
+                resp = make_response(jsonify({"access_token": jwt_access_token, 
+                                              "message": "Login successful"})) #sending this back to frontend 
                 resp.set_cookie(
                     "refresh_token",
                     refresh_token,
                     httponly=True,
-                    secure=True, #only over HTTP
-                    samesite='Strict'
+                    secure=False, #only over HTTP, False for local dev
+                    samesite='Lax' #lax for dev, strict for prod
                 )
                 return resp, 200
             else:
@@ -196,3 +198,14 @@ def get_current_user():
             }
 
         }), 200
+
+@auth_bp.route('/refresh', methods=['POST'])
+@jwt_required(refresh=True)
+def refresh():
+    try:
+        current_user_id = get_jwt_identity()
+        new_token = create_access_token(identity=current_user_id)
+        return jsonify({"access_token": new_token}), 200
+    except Exception as e:
+        current_app.logger.error(f"Token refresh error: {str(e)}")
+        return jsonify({"error": "Token refresh failed"}), 500
