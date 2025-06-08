@@ -22,8 +22,8 @@ function SignupModal({ isOpen, onClose }) {
     password: "",
     confirmPassword: "",
   });
-  const [isLoading, setIsLoading] = useState(false); //?
-  const navigate = useNavigate(); //?
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData((prev) => ({
@@ -60,12 +60,11 @@ function SignupModal({ isOpen, onClose }) {
       });
 
       //API Call
-
       const { data } = await apiService.signup(signupData);
 
       toast({
         title: "Account created successfully!",
-        description: "Welcome to MintMind! You're now signed in.",
+        description: "Welcome to Polarity! You're now signed in.",
       });
 
       //Reset sign up form
@@ -95,7 +94,7 @@ function SignupModal({ isOpen, onClose }) {
 
       toast({
         title: "Signup failed",
-        description: "Something went wrong. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -105,12 +104,12 @@ function SignupModal({ isOpen, onClose }) {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto bg-white/95 backdrop-blur-sm border-0 shadow-xl">
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto shadow-2xl border border-white/10 bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-indigo-900/95 backdrop-blur-md">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-semibold text-center bg-gradient-to-r from-sky-600 to-cyan-600 bg-clip-text text-transparent">
-            Join MintMind
+          <DialogTitle className="text-2xl font-semibold text-center bg-gradient-to-r from-sky-200 to-cyan-200 bg-clip-text text-transparent">
+            Join Polarity
           </DialogTitle>
-          <DialogDescription className="text-center text-gray-600">
+          <DialogDescription className="text-center text-sky-100/70">
             Create your account and start managing your finances smarter
           </DialogDescription>
         </DialogHeader>
@@ -120,7 +119,7 @@ function SignupModal({ isOpen, onClose }) {
             <div className="space-y-2">
               <Label
                 htmlFor="firstName"
-                className="text-sm font-medium text-gray-700"
+                className="text-sm font-medium text-sky-100"
               >
                 First Name
               </Label>
@@ -132,14 +131,14 @@ function SignupModal({ isOpen, onClose }) {
                 value={formData.firstName}
                 onChange={handleChange}
                 required
-                className="h-10 border-gray-200 focus:border-sky-500 focus:ring-sky-500 transition-colors"
+                className="h-10 border-white/20 bg-white/10 text-white placeholder:text-sky-100/50 focus:border-sky-400 focus:ring-sky-400 backdrop-blur-sm transition-colors"
               />
             </div>
 
             <div className="space-y-2">
               <Label
                 htmlFor="lastName"
-                className="text-sm font-medium text-gray-700"
+                className="text-sm font-medium text-sky-100"
               >
                 Last Name
               </Label>
@@ -151,16 +150,13 @@ function SignupModal({ isOpen, onClose }) {
                 value={formData.lastName}
                 onChange={handleChange}
                 required
-                className="h-10 border-gray-200 focus:border-sky-500 focus:ring-sky-500 transition-colors"
+                className="h-10 border-white/20 bg-white/10 text-white placeholder:text-sky-100/50 focus:border-sky-400 focus:ring-sky-400 backdrop-blur-sm transition-colors"
               />
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label
-              htmlFor="email"
-              className="text-sm font-medium text-gray-700"
-            >
+            <Label htmlFor="email" className="text-sm font-medium text-sky-100">
               Email
             </Label>
             <Input
@@ -171,14 +167,14 @@ function SignupModal({ isOpen, onClose }) {
               value={formData.email}
               onChange={handleChange}
               required
-              className="h-10 border-gray-200 focus:border-sky-500 focus:ring-sky-500 transition-colors"
+              className="h-10 border-white/20 bg-white/10 text-white placeholder:text-sky-100/50 focus:border-sky-400 focus:ring-sky-400 backdrop-blur-sm transition-colors"
             />
           </div>
 
           <div className="space-y-2">
             <Label
               htmlFor="username"
-              className="text-sm font-medium text-gray-700"
+              className="text-sm font-medium text-sky-100"
             >
               Username
             </Label>
@@ -190,14 +186,14 @@ function SignupModal({ isOpen, onClose }) {
               value={formData.username}
               onChange={handleChange}
               required
-              className="h-10 border-gray-200 focus:border-sky-500 focus:ring-sky-500 transition-colors"
+              className="h-10 border-white/20 bg-white/10 text-white placeholder:text-sky-100/50 focus:border-sky-400 focus:ring-sky-400 backdrop-blur-sm transition-colors"
             />
           </div>
 
           <div className="space-y-2">
             <Label
               htmlFor="password"
-              className="text-sm font-medium text-gray-700"
+              className="text-sm font-medium text-sky-100"
             >
               Password
             </Label>
@@ -209,14 +205,14 @@ function SignupModal({ isOpen, onClose }) {
               value={formData.password}
               onChange={handleChange}
               required
-              className="h-10 border-gray-200 focus:border-sky-500 focus:ring-sky-500 transition-colors"
+              className="h-10 border-white/20 bg-white/10 text-white placeholder:text-sky-100/50 focus:border-sky-400 focus:ring-sky-400 backdrop-blur-sm transition-colors"
             />
           </div>
 
           <div className="space-y-2">
             <Label
               htmlFor="confirmPassword"
-              className="text-sm font-medium text-gray-700"
+              className="text-sm font-medium text-sky-100"
             >
               Confirm Password
             </Label>
@@ -228,13 +224,13 @@ function SignupModal({ isOpen, onClose }) {
               value={formData.confirmPassword}
               onChange={handleChange}
               required
-              className="h-10 border-gray-200 focus:border-sky-500 focus:ring-sky-500 transition-colors"
+              className="h-10 border-white/20 bg-white/10 text-white placeholder:text-sky-100/50 focus:border-sky-400 focus:ring-sky-400 backdrop-blur-sm transition-colors"
             />
           </div>
 
           <Button
             type="submit"
-            className="w-full h-11 bg-gradient-to-r from-sky-500 to-cyan-500 hover:from-sky-600 hover:to-cyan-600 text-white font-medium transition-all duration-200 transform hover:scale-[1.02] mt-6"
+            className="w-full h-11 bg-gradient-to-r from-sky-500 to-cyan-500 hover:from-sky-400 hover:to-cyan-400 text-white font-medium transition-all duration-300 transform hover:scale-[1.02] hover:shadow-lg hover:shadow-sky-500/25 mt-6"
             disabled={isLoading}
           >
             {isLoading ? (
@@ -249,11 +245,11 @@ function SignupModal({ isOpen, onClose }) {
         </form>
 
         <div className="mt-4 text-center">
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-sky-100/70">
             Already have an account?{" "}
             <button
               onClick={onClose}
-              className="text-sky-600 hover:text-sky-700 font-medium hover:underline transition-colors"
+              className="text-sky-300 hover:text-sky-200 font-medium hover:underline transition-colors"
             >
               Sign in instead
             </button>
