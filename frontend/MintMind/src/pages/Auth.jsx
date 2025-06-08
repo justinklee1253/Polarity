@@ -37,7 +37,7 @@ function Auth() {
       const result = await apiService.login(credentials);
       toast({
         title: "Login successful!",
-        description: "Welcome back to MintMind",
+        description: "Welcome back to Polarity!",
       });
 
       // Navigate to dashboard
@@ -62,7 +62,7 @@ function Auth() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold bg-gradient-to-r from-sky-600 to-cyan-600 bg-clip-text text-transparent mb-2">
-            MintMind
+            Polarity
           </h1>
           <p className="text-gray-600">Smart budgeting for smart students</p>
         </div>

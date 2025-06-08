@@ -22,7 +22,7 @@ function Dashboard() {
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-3xl font-bold bg-gradient-to-r from-sky-600 to-cyan-600 bg-clip-text text-transparent">
-              MintMind Dashboard
+              Polarity Dashboard
             </h1>
             <p className="text-gray-600 mt-1">
               Welcome back! Ready to manage your finances?

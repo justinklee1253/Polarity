@@ -65,7 +65,7 @@ function SignupModal({ isOpen, onClose }) {
 
       toast({
         title: "Account created successfully!",
-        description: "Welcome to MintMind! You're now signed in.",
+        description: "Welcome to Polarity! You're now signed in.",
       });
 
       //Reset sign up form
@@ -108,7 +108,7 @@ function SignupModal({ isOpen, onClose }) {
       <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto bg-white/95 backdrop-blur-sm border-0 shadow-xl">
         <DialogHeader>
           <DialogTitle className="text-2xl font-semibold text-center bg-gradient-to-r from-sky-600 to-cyan-600 bg-clip-text text-transparent">
-            Join MintMind
+            Join Polarity
           </DialogTitle>
           <DialogDescription className="text-center text-gray-600">
             Create your account and start managing your finances smarter
