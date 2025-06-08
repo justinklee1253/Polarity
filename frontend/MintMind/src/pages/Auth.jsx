@@ -13,7 +13,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 import SignupModal from "@/components/SignupModal";
 import { apiService } from "@/services/api";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react"; // Import eye icons
 
 function Auth() {
   const [email, setEmail] = useState("");
@@ -37,7 +37,7 @@ function Auth() {
       const result = await apiService.login(credentials);
       toast({
         title: "Login successful!",
-        description: "Welcome back to Polarity",
+        description: "Welcome back to MintMind",
       });
 
       // Navigate to dashboard
@@ -58,32 +58,21 @@ function Auth() {
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden flex items-center justify-center p-4">
-      {/* Aurora Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 via-cyan-400/20 to-sky-400/20 animate-aurora bg-[length:400%_400%]"></div>
-        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-transparent via-cyan-500/10 to-transparent animate-aurora-slow"></div>
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-float"></div>
-        <div
-          className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl animate-float"
-          style={{ animationDelay: "2s" }}
-        ></div>
-      </div>
-
-      <div className="relative z-10 w-full max-w-md">
+    <div className="min-h-screen bg-gradient-to-br from-sky-50 via-cyan-50 to-blue-50 flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-sky-200 to-cyan-200 bg-clip-text text-transparent mb-2">
-            Polarity
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-sky-600 to-cyan-600 bg-clip-text text-transparent mb-2">
+            MintMind
           </h1>
-          <p className="text-sky-100/80">Smart budgeting for smart students</p>
+          <p className="text-gray-600">Smart budgeting for smart students</p>
         </div>
 
-        <Card className="shadow-2xl border border-white/10 bg-white/10 backdrop-blur-md">
+        <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl font-semibold text-center text-white">
+            <CardTitle className="text-2xl font-semibold text-center">
               Welcome back
             </CardTitle>
-            <CardDescription className="text-center text-sky-100/70">
+            <CardDescription className="text-center">
               Sign in to your account to continue
             </CardDescription>
           </CardHeader>
@@ -92,7 +81,7 @@ function Auth() {
               <div className="space-y-2">
                 <Label
                   htmlFor="email"
-                  className="text-sm font-medium text-sky-100"
+                  className="text-sm font-medium text-gray-700"
                 >
                   Email or Username
                 </Label>
@@ -103,14 +92,14 @@ function Auth() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="h-11 border-white/20 bg-white/10 text-white placeholder:text-sky-100/50 focus:border-sky-400 focus:ring-sky-400 backdrop-blur-sm transition-colors"
+                  className="h-11 border-gray-200 focus:border-sky-500 focus:ring-sky-500 transition-colors"
                 />
               </div>
 
               <div className="space-y-2">
                 <Label
                   htmlFor="password"
-                  className="text-sm font-medium text-sky-100"
+                  className="text-sm font-medium text-gray-700"
                 >
                   Password
                 </Label>
@@ -122,12 +111,12 @@ function Auth() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    className="h-11 border-white/20 bg-white/10 text-white placeholder:text-sky-100/50 focus:border-sky-400 focus:ring-sky-400 backdrop-blur-sm transition-colors"
+                    className="h-11 border-gray-200 focus:border-sky-500 focus:ring-sky-500 transition-colors"
                   />
                   <button
                     type="button"
                     onClick={togglePasswordVis}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-sky-100/70 hover:text-sky-100 transition-colors focus:outline-none"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors focus:outline-none"
                     tabIndex={-1}
                   >
                     {showPassword ? (
@@ -141,7 +130,7 @@ function Auth() {
 
               <Button
                 type="submit"
-                className="w-full h-11 bg-gradient-to-r from-sky-500 to-cyan-500 hover:from-sky-400 hover:to-cyan-400 text-white font-medium transition-all duration-300 transform hover:scale-[1.02] hover:shadow-lg hover:shadow-sky-500/25"
+                className="w-full h-11 bg-gradient-to-r from-sky-500 to-cyan-500 hover:from-sky-600 hover:to-cyan-600 text-white font-medium transition-all duration-200 transform hover:scale-[1.02]"
                 disabled={isLoading}
               >
                 {isLoading ? (
@@ -156,11 +145,11 @@ function Auth() {
             </form>
 
             <div className="mt-6 text-center">
-              <p className="text-sm text-sky-100/70">
+              <p className="text-sm text-gray-600">
                 Don't have an account?{" "}
                 <button
                   onClick={() => setShowSignup(true)}
-                  className="text-sky-300 hover:text-sky-200 font-medium hover:underline transition-colors"
+                  className="text-sky-600 hover:text-sky-700 font-medium hover:underline transition-colors"
                 >
                   Sign up!
                 </button>
@@ -170,7 +159,7 @@ function Auth() {
         </Card>
 
         <div className="mt-8 text-center">
-          <p className="text-xs text-sky-100/50">
+          <p className="text-xs text-gray-500">
             By signing in, you agree to our Terms of Service and Privacy Policy
           </p>
         </div>
