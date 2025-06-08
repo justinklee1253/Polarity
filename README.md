@@ -1,6 +1,6 @@
-# 🧠 MintMind — Smarter Budgeting for College Students
+# 🧠 Polarity — Smarter Budgeting for College Students
 
-MintMind is a web application that helps college students gain control of their spending by combining traditional budgeting tools with AI-powered financial insights. The app encourages responsible financial behavior through intelligent dashboards, reminders, and a personal budgeting assistant.
+Polarity is a web application that helps college students gain control of their spending by combining traditional budgeting tools with AI-powered financial insights. The app encourages responsible financial behavior through intelligent dashboards, reminders, and a personal budgeting assistant.
 
 ---
 
@@ -16,7 +16,7 @@ College students often struggle with:
 
 ## ✅ Solution
 
-MintMind provides:
+Polarity provides:
 
 - 📊 A visual, mobile-friendly **budget dashboard**.
 - ✍️ Easy input for tracking income and expenses.
@@ -27,12 +27,12 @@ MintMind provides:
 
 ## 🚀 MVP Features
 
-- **User Authentication**: Signup/Login with JWT-secured sessions.
-- **Onboarding**: Set initial balance, weekly income, and goals.
+- **User Authentication**: Signup/Login with JWT-secured sessions, with a google sign-in option.
+- **Onboarding**: Set initial balance, weekly income, and goals. Integrated with Plaid API for secure bank account connection.
 - **Transactions**: Add, edit, delete categorized expenses/income.
 - **Dashboard**: Charts and summaries of user finances.
-- **AI Assistant (rudimentary)**: Ask “Can I afford to go out this weekend?” or “Where can I cut costs?”
-- **Persistent Storage**: PostgreSQL (NeonDB) database for user data.
+- **Ask Minty(Personal AI Finance Assistant) **: Ask “Can I afford to go out this weekend?” or “Where can I cut costs?”, implemented via RAG Pipeline connected to dashboard.
+- **Persistent Storage**: PostgreSQL (NeonDB) database for user data for autosacling, performance, reliability
 
 ---
 
@@ -88,8 +88,9 @@ How it works:
 | POST | `/api/auth/login` | Authenticate |
 | GET  | `/api/auth/user` | Get current user |
 | POST | `/api/auth/logout` | Logout |
+| POST | `/api/auth/refresh` | Automate access_token generation when expired |
 
-### 👋 Onboarding
+### 👋 Onboarding 
 
 | Method | Route | Purpose |
 |--------|-------|---------|
@@ -144,5 +145,5 @@ How it works:
 1. Clone the repo:
 
    ```bash
-   git clone https://github.com/yourusername/mintmind.git
-   cd mintmind
+   git clone https://github.com/yourusername/Polarity.git
+   cd Polarity
