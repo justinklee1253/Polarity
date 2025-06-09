@@ -13,7 +13,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 import SignupModal from "@/components/SignupModal";
 import { apiService } from "@/services/api";
-import { Eye, EyeOff } from "lucide-react"; // Import eye icons
+import { Eye, EyeOff } from "lucide-react";
 
 function Auth() {
   const [email, setEmail] = useState("");
@@ -33,7 +33,6 @@ function Auth() {
         password: password,
       };
 
-      console.log(`Login attempt: `, credentials); //REMOVE FOR PROD
       const result = await apiService.login(credentials);
       toast({
         title: "Login successful!",

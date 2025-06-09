@@ -15,7 +15,7 @@ const PersonalizedWelcomeSlide = ({ onNext, onPrev, data }) => {
             </span>
           </div>
           <p className="text-gray-600 text-lg leading-relaxed">
-            Before we get started, let me get to know you better.
+            Before we get started, let us get to know you better.
           </p>
         </div>
       </CardHeader>

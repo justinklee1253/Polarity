@@ -179,18 +179,25 @@ def get_current_user():
         if not user:
             return jsonify({"message": "User not found"}), 404
         
-        onboarding_complete = all([ #returns true if all elements in iterable are true. 
-            user.salary_monthly,
-            user.total_balance, 
-            user.monthly_spending_goal,
+        required_fields_complete = all([ #returns true if all elements in iterable are true. (modify for new onboarding)
+            user.name,
+            user.age,
+            user.salary_monthly is not None,
+            user.total_balance is not None, 
+            user.monthly_spending_goal is not None,
         ])
+
+        if required_fields_complete and not user.onboarding_completed:
+            user.onboarding_completed = True
+            db.commit()
 
         return jsonify({
             "user_id": user.id,
             "name": user.name,
             "username": user.username,
             "email": user.email,
-            "onboarding_complete": onboarding_complete,
+            "onboarding_complete": user.onboarding_complete,
+            "onboarding_step": user.onboarding_step,
             "budget_profile": {
                 "salary_monthly": user.salary_monthly,
                 "monthly_spending_goal": user.monthly_spending_goal,
