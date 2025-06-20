@@ -5,15 +5,12 @@
 /auth/user: fetch current logged in user
 """
 
+import json
 import bcrypt
 import string
-import jwt
-import uuid
 from flask import Blueprint, request, jsonify, current_app, make_response
 from flask_jwt_extended import create_access_token, create_refresh_token, get_jwt, jwt_required, get_jwt_identity
 from datetime import datetime, timedelta
-import sys
-import os
 from ..database import get_db_session
 from ..models import User
 from ..extensions import blacklist
@@ -179,16 +176,20 @@ def get_current_user():
         if not user:
             return jsonify({"message": "User not found"}), 404
         
-        required_fields_complete = all([ #returns true if all elements in iterable are true. (modify for new onboarding)
+
+        required_fields_complete = all([#returns true if all elements in iterable are true. (modify for new onboarding)
             user.name,
             user.age,
+            user.is_student is not None,
+            user.financial_goals,
             user.salary_monthly is not None,
-            user.total_balance is not None, 
             user.monthly_spending_goal is not None,
+            user.total_balance is not None,
         ])
 
         if required_fields_complete and not user.onboarding_completed:
             user.onboarding_completed = True
+            user.onboarding_step = 5
             db.commit()
 
         return jsonify({
@@ -196,14 +197,19 @@ def get_current_user():
             "name": user.name,
             "username": user.username,
             "email": user.email,
-            "onboarding_complete": user.onboarding_complete,
+            "onboarding_completed": user.onboarding_completed,
             "onboarding_step": user.onboarding_step,
             "budget_profile": {
                 "salary_monthly": user.salary_monthly,
                 "monthly_spending_goal": user.monthly_spending_goal,
                 "total_balance": user.total_balance,
+            },
+            "profile_info": {
+                "age": user.age,
+                "is_student": user.is_student,
+                "college_name": user.college_name,
+                "financial_goals": json.loads(user.financial_goals) if user.financial_goals else []
             }
-
         }), 200
 
 @auth_bp.route('/refresh', methods=['POST'])
