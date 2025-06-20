@@ -83,14 +83,19 @@ def signup():
             salt = bcrypt.gensalt() #generate pseudo-random string to add to the password
             hashed_pw = bcrypt.hashpw(bytes_password, salt)
             new_user = User(
-                username = request_data.get('username'),
-                email = request_data.get('email'),
-                password = hashed_pw.decode('utf-8'),
-                name = request_data.get('name'),
-                age = request_data.get('age'),
-                monthly_spending_goal = request_data.get('monthly_spending_goal', 500),
-                salary_monthly = request_data.get('salary_monthly', 0),
-                total_balance = request_data.get('total_balance', 0),
+                email=request_data.get('email'),
+                password=hashed_pw.decode('utf-8'),
+                onboarding_completed=False,
+                onboarding_step=0,
+                name=None,
+                age=None,
+                is_student=None,
+                college_name=None,
+                financial_goals=None,
+                salary_monthly=None,
+                monthly_spending_goal=None,
+                total_balance=None,
+                username=request_data.get('username'),
             )
             db.add(new_user)
             db.commit()
