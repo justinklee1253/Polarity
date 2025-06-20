@@ -28,7 +28,7 @@ def test_db_connection(): #testing connection via sqlalchemy
     except Exception as e:
         print("SQLAlchemy DB connection failed:", e)
 
-@contextmanager
+@contextmanager #set up/tear down resources automatically (used with the "with" statement in our routes)
 def get_db_session():
     db = SessionLocal()
     try:

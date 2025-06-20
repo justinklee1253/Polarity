@@ -1,3 +1,225 @@
-from flask import Blueprint
+import json
+from flask import Blueprint, request, jsonify, current_app
+from flask_jwt_extended import jwt_required, get_jwt_identity
+from ..database import get_db_session
+from ..models import User
 
 onboarding_bp = Blueprint('onboarding', __name__, url_prefix='/onboarding')
+
+
+def validate_onboarding_step_data(step, data):
+    """
+    Helper function to verify data submitted by user at each onboarding step
+    """
+    errors = []
+
+    if step == 1:
+        name = data.get('name', '').strip()
+        if not name:
+            errors.append("Name is required")
+        elif len(name) < 2:
+            errors.append("Name must be at least 2 characters")
+    
+    elif step == 2:
+        age = data.get('age')
+        if not age:
+            errors.append("Age is required")
+        elif not isinstance(age, int) or age < 13 or age > 120: #if age is not an integer
+            errors.append("Please enter a valid age between 13 and 120")
+    
+    elif step == 3:
+        isCollegeStudent = data.get('is_student')
+        if isCollegeStudent is None:
+            errors.append("Student status is required")
+        if isCollegeStudent and not data.get('college_name', '').strip():
+            errors.append("College name is required for students")
+    
+    elif step == 4:
+        financial_goals = data.get('financial_goals')
+        if not financial_goals or not isinstance(financial_goals, list):
+            errors.append("At least one financial goal must be selected")
+
+    elif step == 5:
+        monthly_income = data.get('salary_monthly')
+        spending_goal = data.get('monthly_spending_goal')
+        current_balance = data.get('total_balance')
+
+        if monthly_income is None or not isinstance(monthly_income, (int, float)) or monthly_income < 0:
+            errors.append("Monthly income must be a valid number (0 or greater)")
+        if spending_goal is None or not isinstance(spending_goal, (int, float)) or spending_goal < 0:
+            errors.append("Monthly spending goal must be a valid number (0 or greater)")
+        if current_balance is None or not isinstance(current_balance, (int, float)):
+            errors.append("Current balance must be a valid number")
+    return errors
+
+
+@onboarding_bp.route('/status', methods=['GET'])
+@jwt_required()
+def get_onboarding_status():
+    try: 
+        user_id = get_jwt_identity()
+
+        with get_db_session() as db:
+            user = db.query(User).get(user_id)
+            if not user:
+                return jsonify({"error": "User not found"}), 404
+            
+            return jsonify({
+                "onboarding_completed": user.onboarding_completed,
+                "current_step": user.onboarding_step,
+                "user_data": {
+                    "name": user.name,
+                    "age": user.age,
+                    "is_student": user.is_student,
+                    "college_name": user.college_name,
+                    "financial_goals": json.loads(user.financial_goals) if user.financial_goals else [],
+                    "salary_monthly": user.salary_monthly,
+                    "monthly_spending_goal": user.monthly_spending_goal,
+                    "total_balance": user.total_balance
+                }
+            }), 200
+
+    except Exception as e:
+        current_app.logger.error(f"Get onboarding status error: {str(e)}")
+        return jsonify({"error": "Failed to get onboarding status"}), 500
+    
+@onboarding_bp.route('/step/<int:step>', methods=['POST'])
+@jwt_required()
+def update_onboarding_step(step):
+    try: 
+        user_id = get_jwt_identity()
+        request_data = request.get_json()
+
+        if not request_data:
+            return jsonify({"error": "No data provided"}), 400
+        
+        if step < 1 or step > 5:
+            return jsonify({"error": "Invalid step number"}), 400
+        
+        validation_errors = validate_onboarding_step_data(step, request_data)
+        if validation_errors:
+            return jsonify({"error": validation_errors}), 400
+        
+        with get_db_session() as db:
+            user = db.query(User).get(user_id)
+            if not user:
+                return jsonify({"error": "User not found"}), 404
+
+            if step == 1:
+                user.name = request_data.get('name').strip()
+            
+            elif step == 2:
+                user.age = request_data.get('age')
+            
+            elif step == 3:
+                user.is_student = request_data.get('is_student')
+                if user.is_student:
+                    user.college_name = request_data.get('college_name', '').strip()
+                else:
+                    user.college_name = None
+            
+            elif step == 4:
+                financial_goals = request_data.get('financial_goals', [])
+                user.financial_goals = json.dumps(financial_goals)
+
+            elif step == 5:  # Financial setup step
+                user.salary_monthly = int(request_data.get('salary_monthly', 0))
+                user.monthly_spending_goal = int(request_data.get('monthly_spending_goal', 0))
+                user.total_balance = int(request_data.get('total_balance', 0))
+            
+            if step > user.onboarding_step:
+                user.onboarding_step = step
+            
+            if step == 5:  # Final step
+                    user.onboarding_completed = True
+            db.commit()
+
+            return jsonify({
+                    "message": f"Step {step} completed successfully",
+                    "onboarding_completed": user.onboarding_completed,
+                    "current_step": user.onboarding_step
+                }), 200
+    except ValueError as e:
+        return jsonify({"error": "Invalid data format"}), 400
+    except Exception as e:
+        if 'db' in locals():
+            db.rollback()
+        current_app.logger.error(f"Onboarding step {step} error: {str(e)}")
+        return jsonify({"error": f"Failed to update step {step}"}), 500
+
+
+@onboarding_bp.route('/complete')
+@jwt_required()
+def complete_onboarding():
+    """Mark onboarding as compolete"""
+
+    try: 
+        user_id = get_jwt_identity()
+
+        with get_db_session() as db:
+            user = db.query(User).get(user_id)
+            if not user:
+                return jsonify({"error": "User not found"}), 404
+
+            required_fields_complete = all([
+                user.name,
+                user.age,
+                user.is_student is not None,
+                user.financial_goals,
+                user.salary_monthly is not None,
+                user.monthly_spending_goal is not None,
+                user.total_balance is not None
+            ])
+
+            if not required_fields_complete:
+                return jsonify({"error": "Not all required onboarding steps completed"})
+
+            user.onboarding_completed = True
+            user.onboarding_step = 5
+            db.commit()
+    except Exception as e:
+        if 'db' in locals():
+            db.rollback()
+        
+        current_app.logger.error(f"Complete onboarding error: {str(e)}")
+        return jsonify({"error": "Failed to complete onboarding"}), 500
+
+@onboarding_bp.route('/reset', methods=['POST'])
+@jwt_required()
+def reset_onboarding():
+    """Reset onboarding progress (useful for testing or user request)"""
+    try:
+        user_id = get_jwt_identity()
+        
+        with get_db_session() as db:
+            user = db.query(User).get(user_id)
+            if not user:
+                return jsonify({"error": "User not found"}), 404
+            
+            # Reset onboarding fields
+            user.onboarding_completed = False
+            user.onboarding_step = 0
+            
+            # Optionally reset user data (uncomment if needed)
+            # user.name = None
+            # user.age = None
+            # user.is_student = None
+            # user.college_name = None
+            # user.financial_goals = None
+            # user.salary_monthly = 0
+            # user.monthly_spending_goal = 0
+            # user.total_balance = 0
+            
+            db.commit()
+            
+            return jsonify({
+                "message": "Onboarding reset successfully",
+                "onboarding_completed": False,
+                "current_step": 0
+            }), 200
+            
+    except Exception as e:
+        if 'db' in locals():
+            db.rollback()
+        current_app.logger.error(f"Reset onboarding error: {str(e)}")
+        return jsonify({"error": "Failed to reset onboarding"}), 500
