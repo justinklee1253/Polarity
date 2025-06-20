@@ -3,7 +3,7 @@
 Polarity is a web application that helps college students gain control of their spending by combining traditional budgeting tools with AI-powered financial insights. The app encourages responsible financial behavior through intelligent dashboards, reminders, and a personal budgeting assistant.
 
 
-[API DOCS](ejxy25mli8.apidog.io)
+[API DOCS]([ejxy25mli8.apidog.io](https://ejxy25mli8.apidog.io/))
 
 ---
 
