@@ -1,15 +1,15 @@
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const WelcomeSlide = ({ onNext, onDataUpdate, data }) => {
-  const [name, setName] = useState(data.name);
+  const handleInputChange = (e) => {
+    onDataUpdate({ name: e.target.value });
+  };
 
   const handleNext = () => {
-    if (name.trim()) {
-      onDataUpdate({ name: name.trim() });
+    if (data.name && data.name.trim()) {
       onNext();
     }
   };
@@ -36,8 +36,8 @@ const WelcomeSlide = ({ onNext, onDataUpdate, data }) => {
             id="name"
             type="text"
             placeholder="Enter your first name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
+            value={data.name}
+            onChange={handleInputChange}
             className="h-12 border-gray-200 focus:border-sky-500 focus:ring-sky-500 transition-colors text-lg"
             autoFocus
           />
@@ -45,7 +45,7 @@ const WelcomeSlide = ({ onNext, onDataUpdate, data }) => {
 
         <Button
           onClick={handleNext}
-          disabled={!name.trim()}
+          disabled={!data.name || !data.name.trim()}
           className="w-full h-12 bg-gradient-to-r from-sky-500 to-cyan-500 hover:from-sky-600 hover:to-cyan-600 text-white font-medium transition-all duration-200 transform hover:scale-[1.02] disabled:opacity-50 disabled:transform-none"
         >
           Continue

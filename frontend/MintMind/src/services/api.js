@@ -87,23 +87,18 @@ class ApiService {
         method: "POST",
         body: JSON.stringify(credentials),
       });
-
-      console.log("Login response:", { data, status: response.status }); //debugging log (remove for prod)
-
       if (data.access_token) {
         localStorage.setItem("access_token", data.access_token);
-        console.log("Access token stored successfully");
       }
-
+      // Store onboarding step for resuming
       if (!data.onboarding_completed) {
+        localStorage.setItem("onboarding_step", data.onboarding_step || "0");
         window.location.href = "/onboarding";
       } else {
         window.location.href = "/dashboard";
       }
-
       return { data, response };
     } catch (error) {
-      console.error("Login failed:", error);
       throw new Error(error.message || "Login failed");
     }
   }
@@ -146,6 +141,36 @@ class ApiService {
     });
   }
 
+  async updateOnboardingStep(step, data) {
+    const token = localStorage.getItem("access_token");
+    return this.request(`/onboarding/step/${step}`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+  }
+
+  async completeOnboarding() {
+    const token = localStorage.getItem("access_token");
+    return this.request("/onboarding/complete", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  }
+  async getOnboardingStatus() {
+    const token = localStorage.getItem("access_token");
+    return this.request("/onboarding/status", {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  }
   isAuthenticated() {
     const token = localStorage.getItem("access_token");
     return !!token;

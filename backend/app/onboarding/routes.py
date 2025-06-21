@@ -21,25 +21,30 @@ def validate_onboarding_step_data(step, data):
             errors.append("Name must be at least 2 characters")
     
     elif step == 2:
-        age = data.get('age')
-        if not age:
-            errors.append("Age is required")
-        elif not isinstance(age, int) or age < 13 or age > 120: #if age is not an integer
-            errors.append("Please enter a valid age between 13 and 120")
-    
+        pass
+
     elif step == 3:
+        age = data.get('age')
+        if age is None:
+            errors.append("Age is required")
+        elif not isinstance(age, int) or age < 13 or age > 120:
+            errors.append("Please enter a valid age between 13 and 120")
+       
+    
+    elif step == 4:
         isCollegeStudent = data.get('is_student')
         if isCollegeStudent is None:
             errors.append("Student status is required")
         if isCollegeStudent and not data.get('college_name', '').strip():
             errors.append("College name is required for students")
-    
-    elif step == 4:
+        
+
+    elif step == 5:
         financial_goals = data.get('financial_goals')
         if not financial_goals or not isinstance(financial_goals, list):
             errors.append("At least one financial goal must be selected")
-
-    elif step == 5:
+        
+    elif step == 6:
         monthly_income = data.get('salary_monthly')
         spending_goal = data.get('monthly_spending_goal')
         current_balance = data.get('total_balance')
@@ -50,6 +55,7 @@ def validate_onboarding_step_data(step, data):
             errors.append("Monthly spending goal must be a valid number (0 or greater)")
         if current_balance is None or not isinstance(current_balance, (int, float)):
             errors.append("Current balance must be a valid number")
+
     return errors
 
 
@@ -89,51 +95,70 @@ def update_onboarding_step(step):
     try: 
         user_id = get_jwt_identity()
         request_data = request.get_json()
-
-        if not request_data:
+        if request_data is None:
             return jsonify({"error": "No data provided"}), 400
-        
-        if step < 1 or step > 5:
+        if step < 1 or step > 6:
             return jsonify({"error": "Invalid step number"}), 400
-        
         validation_errors = validate_onboarding_step_data(step, request_data)
         if validation_errors:
             return jsonify({"error": validation_errors}), 400
-        
         with get_db_session() as db:
             user = db.query(User).get(user_id)
             if not user:
                 return jsonify({"error": "User not found"}), 404
-
             if step == 1:
-                user.name = request_data.get('name').strip()
-            
+                name = request_data.get('name')
+                if not name or not name.strip():
+                    return jsonify({"error": "Name is required"}), 400
+                user.name = name.strip()
+                if user.age is None:
+                    user.age = 0
+                if user.is_student is None:
+                    user.is_student = False
+                if user.college_name is None:
+                    user.college_name = ''
+                if user.financial_goals is None:
+                    user.financial_goals = json.dumps([])
+                if user.salary_monthly is None:
+                    user.salary_monthly = 0
+                if user.monthly_spending_goal is None:
+                    user.monthly_spending_goal = 0
+                if user.total_balance is None:
+                    user.total_balance = 0
             elif step == 2:
-                user.age = request_data.get('age')
-            
+                pass
             elif step == 3:
+                user.age = request_data.get('age')
+            elif step == 4:
                 user.is_student = request_data.get('is_student')
                 if user.is_student:
                     user.college_name = request_data.get('college_name', '').strip()
                 else:
                     user.college_name = None
-            
-            elif step == 4:
+            elif step == 5:
                 financial_goals = request_data.get('financial_goals', [])
                 user.financial_goals = json.dumps(financial_goals)
-
-            elif step == 5:  # Financial setup step
+            elif step == 6:
                 user.salary_monthly = int(request_data.get('salary_monthly', 0))
                 user.monthly_spending_goal = int(request_data.get('monthly_spending_goal', 0))
                 user.total_balance = int(request_data.get('total_balance', 0))
-            
+            if user.onboarding_step is None:
+                user.onboarding_step = 0
             if step > user.onboarding_step:
                 user.onboarding_step = step
-            
-            if step == 5:  # Final step
-                    user.onboarding_completed = True
+            required_fields_complete = all([
+                user.name,
+                user.age is not None,
+                user.is_student is not None,
+                user.financial_goals,
+                user.salary_monthly is not None,
+                user.monthly_spending_goal is not None,
+                user.total_balance is not None,
+                (user.college_name if user.is_student else True)
+            ])
+            if step == 6 and required_fields_complete:
+                user.onboarding_completed = True
             db.commit()
-
             return jsonify({
                     "message": f"Step {step} completed successfully",
                     "onboarding_completed": user.onboarding_completed,
@@ -148,39 +173,39 @@ def update_onboarding_step(step):
         return jsonify({"error": f"Failed to update step {step}"}), 500
 
 
-@onboarding_bp.route('/complete')
+@onboarding_bp.route('/complete', methods=['POST'])
 @jwt_required()
 def complete_onboarding():
-    """Mark onboarding as compolete"""
-
     try: 
         user_id = get_jwt_identity()
-
         with get_db_session() as db:
             user = db.query(User).get(user_id)
             if not user:
                 return jsonify({"error": "User not found"}), 404
-
             required_fields_complete = all([
                 user.name,
-                user.age,
+                user.age is not None,
                 user.is_student is not None,
                 user.financial_goals,
                 user.salary_monthly is not None,
                 user.monthly_spending_goal is not None,
-                user.total_balance is not None
+                user.total_balance is not None,
+                (user.college_name if user.is_student else True)
             ])
-
             if not required_fields_complete:
                 return jsonify({"error": "Not all required onboarding steps completed"})
-
-            user.onboarding_completed = True
-            user.onboarding_step = 5
-            db.commit()
+            if required_fields_complete and not user.onboarding_completed:
+                user.onboarding_completed = True
+                user.onboarding_step = 6
+                db.commit()
+            return jsonify({
+                "message": "Onboarding completed successfully",
+                "onboarding_completed": user.onboarding_completed,
+                "current_step": user.onboarding_step
+            }), 200
     except Exception as e:
         if 'db' in locals():
             db.rollback()
-        
         current_app.logger.error(f"Complete onboarding error: {str(e)}")
         return jsonify({"error": "Failed to complete onboarding"}), 500
 

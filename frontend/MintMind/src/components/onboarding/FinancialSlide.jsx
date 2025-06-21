@@ -65,7 +65,14 @@ const FinancialSlide = ({ onComplete, onPrev, onDataUpdate, data }) => {
               type="number"
               placeholder="0.00"
               value={monthlySalary}
-              onChange={(e) => setMonthlySalary(e.target.value)}
+              onChange={(e) => {
+                setMonthlySalary(e.target.value);
+                onDataUpdate({
+                  monthlySalary: e.target.value
+                    ? parseFloat(e.target.value)
+                    : null,
+                });
+              }}
               className="h-12 border-gray-200 focus:border-sky-500 focus:ring-sky-500 transition-colors text-lg"
               min="0"
               step="0.01"
@@ -84,7 +91,14 @@ const FinancialSlide = ({ onComplete, onPrev, onDataUpdate, data }) => {
               type="number"
               placeholder="0.00"
               value={monthlySpendingGoal}
-              onChange={(e) => setMonthlySpendingGoal(e.target.value)}
+              onChange={(e) => {
+                setMonthlySpendingGoal(e.target.value);
+                onDataUpdate({
+                  monthlySpendingGoal: e.target.value
+                    ? parseFloat(e.target.value)
+                    : null,
+                });
+              }}
               className="h-12 border-gray-200 focus:border-sky-500 focus:ring-sky-500 transition-colors text-lg"
               min="0"
               step="0.01"
@@ -103,7 +117,14 @@ const FinancialSlide = ({ onComplete, onPrev, onDataUpdate, data }) => {
               type="number"
               placeholder="0.00"
               value={currentBalance}
-              onChange={(e) => setCurrentBalance(e.target.value)}
+              onChange={(e) => {
+                setCurrentBalance(e.target.value);
+                onDataUpdate({
+                  currentBalance: e.target.value
+                    ? parseFloat(e.target.value)
+                    : null,
+                });
+              }}
               className="h-12 border-gray-200 focus:border-sky-500 focus:ring-sky-500 transition-colors text-lg"
               min="0"
               step="0.01"

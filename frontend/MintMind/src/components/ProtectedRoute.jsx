@@ -14,17 +14,14 @@ const ProtectedRoute = ({ children, requireOnboardingComplete = false }) => {
           navigate("/auth");
           return;
         }
-
         if (requireOnboardingComplete && !data.onboarding_completed) {
           navigate("/onboarding");
           return;
         }
-
         if (!requireOnboardingComplete && data.onboarding_completed) {
           navigate("/dashboard");
           return;
         }
-
         setLoading(false);
       } catch (error) {
         navigate("/auth");

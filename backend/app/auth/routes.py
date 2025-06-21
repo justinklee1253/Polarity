@@ -184,28 +184,10 @@ def get_current_user():
         user = db.query(User).get(user_id)
         if not user:
             return jsonify({"message": "User not found"}), 404
-        
-        required_fields_complete = all([
-            user.name,
-            user.age is not None,
-            user.is_student is not None,
-            user.financial_goals,
-            user.salary_monthly is not None,
-            user.monthly_spending_goal is not None,
-            user.total_balance is not None,
-            (user.college_name if user.is_student else True)
-        ])
-
-        if required_fields_complete and not user.onboarding_completed:
-            user.onboarding_completed = True
-            user.onboarding_step = 5
-            db.commit()
-
         try:
             financial_goals = json.loads(user.financial_goals) if user.financial_goals not in (None, '', 'null') else []
         except Exception:
             financial_goals = []
-
         return jsonify({
             "user_id": user.id,
             "name": user.name,

@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { data, useNavigate } from "react-router-dom";
 import WelcomeSlide from "@/components/onboarding/WelcomeSlide";
 import PersonalizedWelcomeSlide from "@/components/onboarding/PersonalizedWelcomeSlide";
 import AgeSlide from "@/components/onboarding/AgeSlide";
@@ -7,6 +7,7 @@ import CollegeSlide from "@/components/onboarding/CollegeSlide";
 import ReasonSlide from "@/components/onboarding/ReasonSlide";
 import FinancialSlide from "@/components/onboarding/FinancialSlide";
 import { toast } from "@/hooks/use-toast";
+import { apiService } from "@/services/api";
 
 const Onboarding = () => {
   const [currentStep, setCurrentStep] = useState(0);
@@ -22,20 +23,102 @@ const Onboarding = () => {
   });
   const navigate = useNavigate();
 
-  const nextStep = () => setCurrentStep((prev) => prev + 1);
+  // On mount, fetch onboarding status and set step
+  useEffect(() => {
+    apiService.getOnboardingStatus().then(({ data }) => {
+      if (data.onboarding_completed) {
+        navigate("/dashboard");
+      } else if (typeof data.current_step === "number") {
+        setCurrentStep(data.current_step);
+      }
+    });
+  }, [navigate]);
+
+  // Helper to map frontend data to backend expected fields
+  const mapDataForBackend = () => {
+    return {
+      name: onboardingData.name,
+      age: onboardingData.age,
+      is_student: onboardingData.isCollegeStudent,
+      college_name: onboardingData.college,
+      financial_goals: onboardingData.reason ? [onboardingData.reason] : [],
+      salary_monthly: onboardingData.monthlySalary,
+      monthly_spending_goal: onboardingData.monthlySpendingGoal,
+      total_balance: onboardingData.currentBalance,
+    };
+  };
+
+  const nextStep = async () => {
+    // Save current step to backend before moving to next
+    try {
+      // Map step index to backend step (1-based)
+      const backendStep = currentStep + 1;
+      // Only send relevant data for each step
+      let dataToSend = {};
+      if (backendStep === 1) {
+        dataToSend = { name: onboardingData.name };
+      } else if (backendStep === 2) {
+        dataToSend = {}; // no-op
+      } else if (backendStep === 3) {
+        dataToSend = { age: onboardingData.age };
+      } else if (backendStep === 4) {
+        dataToSend = {
+          is_student: onboardingData.isCollegeStudent,
+          college_name: onboardingData.isCollegeStudent
+            ? onboardingData.college
+            : null,
+        };
+      } else if (backendStep === 5) {
+        dataToSend = {
+          financial_goals: onboardingData.reason ? [onboardingData.reason] : [],
+        };
+      } else if (backendStep === 6) {
+        dataToSend = {
+          salary_monthly: onboardingData.monthlySalary,
+          monthly_spending_goal: onboardingData.monthlySpendingGoal,
+          total_balance: onboardingData.currentBalance,
+        };
+      }
+      if (backendStep <= 6) {
+        console.log(backendStep, dataToSend);
+        await apiService.updateOnboardingStep(backendStep, dataToSend);
+      }
+      setCurrentStep((prev) => prev + 1);
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: err.message || "Failed to save onboarding step",
+      });
+    }
+  };
+
   const prevStep = () => setCurrentStep((prev) => prev - 1);
 
   const updateData = (newData) => {
     setOnboardingData((prev) => ({ ...prev, ...newData }));
   };
 
-  const completeOnboarding = () => {
-    console.log("Onboarding completed with data:", onboardingData);
-    toast({
-      title: "Welcome to Polarity!",
-      description: "Your account has been set up successfully.",
-    });
-    navigate("/dashboard");
+  const completeOnboarding = async () => {
+    try {
+      // Save the last step (step 6)
+      await apiService.updateOnboardingStep(6, {
+        salary_monthly: onboardingData.monthlySalary,
+        monthly_spending_goal: onboardingData.monthlySpendingGoal,
+        total_balance: onboardingData.currentBalance,
+      });
+      // Mark onboarding as complete
+      await apiService.completeOnboarding();
+      toast({
+        title: "Welcome to Polarity!",
+        description: "Your account has been set up successfully.",
+      });
+      navigate("/dashboard");
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: err.message || "Failed to complete onboarding",
+      });
+    }
   };
 
   const renderStep = () => {
@@ -86,7 +169,7 @@ const Onboarding = () => {
           );
         } else {
           // Skip reason slide if not a college student
-          setCurrentStep(5);
+          setCurrentStep(6);
           return null;
         }
       case 5:
@@ -109,7 +192,7 @@ const Onboarding = () => {
         {/* Progress indicator */}
         <div className="mb-8">
           <div className="flex justify-center space-x-2">
-            {[0, 1, 2, 3, 4, 5].map((step) => {
+            {[0, 1, 2, 3, 4, 5, 6].map((step) => {
               // Skip step 4 indicator if not a college student
               if (
                 step === 4 &&
