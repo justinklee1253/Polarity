@@ -88,11 +88,17 @@ class ApiService {
         body: JSON.stringify(credentials),
       });
 
-      console.log("Login response:", { data, status: response.status });
+      console.log("Login response:", { data, status: response.status }); //debugging log (remove for prod)
 
       if (data.access_token) {
         localStorage.setItem("access_token", data.access_token);
         console.log("Access token stored successfully");
+      }
+
+      if (!data.onboarding_completed) {
+        window.location.href = "/onboarding";
+      } else {
+        window.location.href = "/dashboard";
       }
 
       return { data, response };
@@ -118,6 +124,7 @@ class ApiService {
 
   async getCurrentUser() {
     const token = localStorage.getItem("access_token"); //getting the access JWT token from browser's localstorage
+    console.log("Token:", token);
     if (!token) {
       throw new Error("No access token found");
     }

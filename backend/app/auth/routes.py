@@ -138,10 +138,14 @@ def login():
             ).first()
 
             if verified_user and bcrypt.checkpw(request_data.get('password').encode('utf-8'), verified_user.password.encode('utf-8')):
-                jwt_access_token = create_access_token(identity=verified_user.id)
-                refresh_token = create_refresh_token(identity=verified_user.id) #allows client to obtain new access tokens without user re-auth
+                jwt_access_token = create_access_token(identity=str(verified_user.id))
+                refresh_token = create_refresh_token(identity=str(verified_user.id)) #allows client to obtain new access tokens without user re-auth
                 resp = make_response(jsonify({"access_token": jwt_access_token, 
-                                              "message": "Login successful"})) #sending this back to frontend 
+                                              "message": "Login successful",
+                                              "onboarding_completed": verified_user.onboarding_completed,
+                                              "onboarding_step": verified_user.onboarding_step,
+                                              })) #sending this back to frontend 
+                #setting the refresh token as a cookie
                 resp.set_cookie(
                     "refresh_token",
                     refresh_token,
@@ -181,21 +185,26 @@ def get_current_user():
         if not user:
             return jsonify({"message": "User not found"}), 404
         
-
-        required_fields_complete = all([#returns true if all elements in iterable are true. (modify for new onboarding)
+        required_fields_complete = all([
             user.name,
-            user.age,
+            user.age is not None,
             user.is_student is not None,
             user.financial_goals,
             user.salary_monthly is not None,
             user.monthly_spending_goal is not None,
             user.total_balance is not None,
+            (user.college_name if user.is_student else True)
         ])
 
         if required_fields_complete and not user.onboarding_completed:
             user.onboarding_completed = True
             user.onboarding_step = 5
             db.commit()
+
+        try:
+            financial_goals = json.loads(user.financial_goals) if user.financial_goals not in (None, '', 'null') else []
+        except Exception:
+            financial_goals = []
 
         return jsonify({
             "user_id": user.id,
@@ -213,7 +222,7 @@ def get_current_user():
                 "age": user.age,
                 "is_student": user.is_student,
                 "college_name": user.college_name,
-                "financial_goals": json.loads(user.financial_goals) if user.financial_goals else []
+                "financial_goals": financial_goals
             }
         }), 200
 
