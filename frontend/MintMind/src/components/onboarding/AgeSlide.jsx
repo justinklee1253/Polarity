@@ -11,7 +11,7 @@ const AgeSlide = ({ onNext, onPrev, onDataUpdate, data }) => {
     const ageNum = parseInt(age);
     if (ageNum && ageNum > 0 && ageNum < 120) {
       onDataUpdate({ age: ageNum });
-      onNext();
+      onNext({ age: ageNum });
     }
   };
 

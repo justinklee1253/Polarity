@@ -34,13 +34,21 @@ function Auth() {
       };
 
       const result = await apiService.login(credentials);
+
+      // Extract onboarding status from login response
+      const { onboarding_completed, onboarding_step } = result.data;
+
       toast({
         title: "Login successful!",
         description: "Welcome back to Polarity!",
       });
 
-      // Navigate to dashboard
-      navigate("/dashboard");
+      // Navigate based on onboarding status
+      if (!onboarding_completed) {
+        navigate("/onboarding");
+      } else {
+        navigate("/dashboard");
+      }
     } catch (error) {
       toast({
         title: "Login failed",

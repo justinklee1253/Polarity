@@ -80,8 +80,11 @@ function Dashboard() {
           </h1>
           <p className="text-gray-600 mt-1 flex items-center gap-2">
             <GraduationCap className="h-4 w-4" />
-            {profile_info.college_name || "College Student"} • Ready to manage
-            your finances?
+            {profile_info.college_name &&
+            profile_info.college_name.trim() !== ""
+              ? profile_info.college_name
+              : "College Student"}{" "}
+            • Ready to manage your finances?
           </p>
         </div>
       </div>

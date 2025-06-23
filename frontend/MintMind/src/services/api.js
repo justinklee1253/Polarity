@@ -2,7 +2,9 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 class ApiService {
   constructor() {
-    this.isRefreshing = false; //flag for preventing multiple refresh attempts.
+    this.isRefreshing = false; //flag for tracking whether token refresh is in progress.
+    //if api service detects expired JWT, tries to refresh.
+    //if multiple request fail at the same time, you don't want to send multiple refresh requests at thge same time.
   }
 
   async request(endpoint, options = {}) {

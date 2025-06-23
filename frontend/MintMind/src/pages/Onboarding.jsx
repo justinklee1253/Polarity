@@ -47,8 +47,7 @@ const Onboarding = () => {
       total_balance: onboardingData.currentBalance,
     };
   };
-
-  const nextStep = async () => {
+  const nextStep = async (immediateData = null) => {
     // Save current step to backend before moving to next
     try {
       // Map step index to backend step (1-based)
@@ -60,7 +59,18 @@ const Onboarding = () => {
       } else if (backendStep === 2) {
         dataToSend = {}; // no-op
       } else if (backendStep === 3) {
-        dataToSend = { age: onboardingData.age };
+        // Use immediate data if provided, otherwise use state
+        const ageValue = immediateData?.age || onboardingData.age;
+        if (!ageValue) {
+          console.error(
+            "Age is missing. immediateData:",
+            immediateData,
+            "onboardingData:",
+            onboardingData
+          );
+          throw new Error("Age is required");
+        }
+        dataToSend = { age: ageValue };
       } else if (backendStep === 4) {
         dataToSend = {
           is_student: onboardingData.isCollegeStudent,
@@ -80,18 +90,23 @@ const Onboarding = () => {
         };
       }
       if (backendStep <= 6) {
-        console.log(backendStep, dataToSend);
+        console.log(
+          "Sending to backend - Step:",
+          backendStep,
+          "Data:",
+          dataToSend
+        );
         await apiService.updateOnboardingStep(backendStep, dataToSend);
       }
       setCurrentStep((prev) => prev + 1);
     } catch (err) {
+      console.error("nextStep error:", err);
       toast({
         title: "Error",
         description: err.message || "Failed to save onboarding step",
       });
     }
   };
-
   const prevStep = () => setCurrentStep((prev) => prev - 1);
 
   const updateData = (newData) => {
