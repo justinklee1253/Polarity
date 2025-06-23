@@ -31,11 +31,23 @@ const reasons = [
 ];
 
 const ReasonSlide = ({ onNext, onPrev, onDataUpdate, data }) => {
-  const [reason, setReason] = useState(data.reason);
+  const [selectedReasons, setSelectedReasons] = useState(
+    Array.isArray(data.reasons)
+      ? data.reasons
+      : data.reason
+      ? [data.reason]
+      : []
+  );
 
-  const handleReasonSelect = (selectedReason) => {
-    setReason(selectedReason);
-    onDataUpdate({ reason: selectedReason });
+  const handleReasonToggle = (selectedReason) => {
+    let updated;
+    if (selectedReasons.includes(selectedReason)) {
+      updated = selectedReasons.filter((r) => r !== selectedReason);
+    } else {
+      updated = [...selectedReasons, selectedReason];
+    }
+    setSelectedReasons(updated);
+    onDataUpdate({ reasons: updated });
   };
 
   return (
@@ -53,9 +65,10 @@ const ReasonSlide = ({ onNext, onPrev, onDataUpdate, data }) => {
           {reasons.map((reasonOption) => (
             <button
               key={reasonOption.value}
-              onClick={() => handleReasonSelect(reasonOption.value)}
+              type="button"
+              onClick={() => handleReasonToggle(reasonOption.value)}
               className={`w-full p-4 text-left rounded-lg border-2 transition-all duration-200 hover:scale-[1.02] ${
-                reason === reasonOption.value
+                selectedReasons.includes(reasonOption.value)
                   ? "border-sky-500 bg-sky-50 shadow-md"
                   : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
               }`}
@@ -80,7 +93,7 @@ const ReasonSlide = ({ onNext, onPrev, onDataUpdate, data }) => {
           </Button>
           <Button
             onClick={onNext}
-            disabled={!reason}
+            disabled={selectedReasons.length === 0}
             className="flex-1 h-12 bg-gradient-to-r from-sky-500 to-cyan-500 hover:from-sky-600 hover:to-cyan-600 text-white font-medium transition-all duration-200 transform hover:scale-[1.02] disabled:opacity-50 disabled:transform-none"
           >
             Continue

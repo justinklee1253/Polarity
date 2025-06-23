@@ -16,20 +16,36 @@ const Onboarding = () => {
     age: null,
     isCollegeStudent: null,
     college: "",
-    reason: "",
+    reasons: [],
     monthlySalary: null,
     monthlySpendingGoal: null,
     currentBalance: null,
   });
   const navigate = useNavigate();
 
-  // On mount, fetch onboarding status and set step
+  // On mount, fetch onboarding status and set step and data
   useEffect(() => {
     apiService.getOnboardingStatus().then(({ data }) => {
       if (data.onboarding_completed) {
         navigate("/dashboard");
       } else if (typeof data.current_step === "number") {
+        4;
         setCurrentStep(data.current_step);
+        // Pre-populate onboardingData from backend user_data if available
+        if (data.user_data) {
+          setOnboardingData({
+            name: data.user_data.name || "",
+            age: data.user_data.age ?? null,
+            isCollegeStudent: data.user_data.is_student ?? null,
+            college: data.user_data.college_name || "",
+            reasons: Array.isArray(data.user_data.financial_goals)
+              ? data.user_data.financial_goals
+              : [],
+            monthlySalary: data.user_data.salary_monthly ?? null,
+            monthlySpendingGoal: data.user_data.monthly_spending_goal ?? null,
+            currentBalance: data.user_data.total_balance ?? null,
+          });
+        }
       }
     });
   }, [navigate]);
@@ -41,7 +57,9 @@ const Onboarding = () => {
       age: onboardingData.age,
       is_student: onboardingData.isCollegeStudent,
       college_name: onboardingData.college,
-      financial_goals: onboardingData.reason ? [onboardingData.reason] : [],
+      financial_goals: Array.isArray(onboardingData.reasons)
+        ? onboardingData.reasons
+        : [],
       salary_monthly: onboardingData.monthlySalary,
       monthly_spending_goal: onboardingData.monthlySpendingGoal,
       total_balance: onboardingData.currentBalance,
@@ -80,7 +98,9 @@ const Onboarding = () => {
         };
       } else if (backendStep === 5) {
         dataToSend = {
-          financial_goals: onboardingData.reason ? [onboardingData.reason] : [],
+          financial_goals: Array.isArray(onboardingData.reasons)
+            ? onboardingData.reasons
+            : [],
         };
       } else if (backendStep === 6) {
         dataToSend = {
@@ -90,12 +110,12 @@ const Onboarding = () => {
         };
       }
       if (backendStep <= 6) {
-        console.log(
-          "Sending to backend - Step:",
-          backendStep,
-          "Data:",
-          dataToSend
-        );
+        // console.log( DEBUG
+        //   "Sending to backend - Step:",
+        //   backendStep,
+        //   "Data:",
+        //   dataToSend
+        // );
         await apiService.updateOnboardingStep(backendStep, dataToSend);
       }
       setCurrentStep((prev) => prev + 1);

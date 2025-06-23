@@ -24,3 +24,5 @@ class Config:
     DATABASE_URL = os.getenv('DATABASE_URL')
     DEBUG = True
 
+    OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+
