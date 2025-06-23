@@ -1,3 +1,5 @@
+import React, { useEffect, useState } from "react";
+import { apiService } from "@/services/api";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -18,6 +20,10 @@ import {
 } from "lucide-react";
 
 function Dashboard() {
+  const [userData, setUserData] = useState(null);
+  const [loading, setLoading] = useState(null);
+  const [error, setError] = useState(null);
+
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -29,23 +35,25 @@ function Dashboard() {
     }
   };
 
-  // Mock data for now
-  const userData = {
-    name: "Student",
-    username: "student",
-    onboarding_completed: true,
-    budget_profile: {
-      total_balance: 1247.5,
-      monthly_spending_goal: 2000,
-      salary_monthly: 1500,
-    },
-    profile_info: {
-      college_name: "Your College",
-      is_student: true,
-      age: 20,
-      financial_goals: ["Save for emergencies", "Budget for textbooks"],
-    },
-  };
+  useEffect(() => {
+    //only runs on initial render of component, since data is not subject to change unless user directly modifies it.
+    const fetchUser = async () => {
+      try {
+        const { data } = await apiService.getCurrentUser(); //apiService.getCurrentUser() is an async function that returns a promise
+        //when resolved, will return object like {data: ..., response: ...}, {data} is object destructuring in javascript.
+        setUserData(data); // data is the actually parsed JSON object
+      } catch (err) {
+        setError("Failed to load user data");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchUser();
+  }, []);
+
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>{error}</div>;
+  if (!userData) return <div>No User Data Found</div>;
 
   const { budget_profile, profile_info } = userData;
   const spendingProgress =

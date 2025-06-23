@@ -119,7 +119,7 @@ class ApiService {
 
   async getCurrentUser() {
     const token = localStorage.getItem("access_token"); //getting the access JWT token from browser's localstorage
-    console.log("Token:", token);
+    // console.log("Token:", token); DEBUG TO SHOW JWT TOKEN
     if (!token) {
       throw new Error("No access token found");
     }
