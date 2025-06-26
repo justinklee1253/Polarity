@@ -28,7 +28,7 @@ class User(Base):
     is_student = Column(Boolean, nullable=True)
     financial_goals = Column(Text, nullable=True) #json string of goals (have options)
 
-    conversations = relationship("Conversations", back_populates="user", cascade="all, delete-orphan")
+    conversations = relationship("Conversations", back_populates="user", cascade="all, delete-orphan") #for each user, access all conversations as a list
 
 class Conversations(Base):
     """
