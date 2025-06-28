@@ -125,6 +125,9 @@ export default {
         "aurora-slow": "aurora-slow 12s linear infinite",
         float: "float 6s ease-in-out infinite",
       },
+      fontFamily: {
+        sans: ["Inter", "ui-sans-serif", "system-ui"],
+      },
     },
   },
   plugins: [require("tailwindcss-animate")],

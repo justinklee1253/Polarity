@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify, current_app, make_response
 from flask_jwt_extended import create_access_token, create_refresh_token, get_jwt, jwt_required, get_jwt_identity
+from .ai_service import get_ai_response
 from ..database import get_db_session
 from ..models import Conversations, Messages, User
 
@@ -12,8 +13,8 @@ def create_conversation():
     1.When user presses new chat, or types inside "What Can I Help with?" input box
     2.Create new conversation within database (unique id), created_at, last_modified, title: initially New conversation (# them), user_id
     """
-    user_id = get_jwt_identity()
-    try:
+    user_id = get_jwt_identity() 
+    try: 
         with get_db_session() as db:
             user = db.query(User).get(user_id) 
 
@@ -107,4 +108,39 @@ def delete_conversation(id):
             
     except Exception as e:
         return jsonify({"error": "Failed to delete conversation"}), 500
-    
+
+
+@chat_bp.route('/conversations/<int:id>/messages', methods=["POST"])
+@jwt_required()
+def send_user_message(id):
+    """
+    Based on the conversation specified by the frontend request, 
+    User sends message in textbox --> hit this route to get message from user + which convo it's in.
+    Pass this to LLM --> LLM returns response --> send response back to frontend containing response.
+    """
+    user_id = get_jwt_identity()
+    request = request.get_json()
+    try:
+        with get_db_session() as db:
+            convo = db.query(Conversations).filter_by(id=id, user_id=user_id).first()
+            if not convo:
+                return jsonify({"error": "Conversation not found"}), 404
+            user_message = request.get('message')
+            if not user_message:
+                return jsonify({"error": "No message content found"}), 400
+            
+            messages = db.query(Messages).filter_by(conversation_id=convo.id).order_by(Messages.timestamp).all() #get all messages in conversation
+            history = []
+            for msg in messages: 
+                role = "user" if msg.sender == "user" else "assistant"  #How do we identify sender on the frontend?
+                history.append({"role": role, "content": msg.content})
+            
+            history.append({"role": "user", "content": user_message})
+            
+            ai_response = get_ai_response(user_message, conversation_history=history)
+
+            return jsonify({"response": ai_response}), 200
+    except Exception as e:
+        return jsonify({"error": "Failed to process message"}), 500
+
+

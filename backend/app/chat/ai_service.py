@@ -9,14 +9,14 @@ load_dotenv()
 
 client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
 
-completion = client.chat.completions.create(
-  model="gpt-4o-mini",
-  messages=[
-      {"role": "system", 
-       "content": dev_system_instr},
-       {"role": "user",
-        "content": "I make $850 a month from my work study job on campus. How should I save for a trip to Korea that costs $3,500 in 8 months?" },
-  ]
-)
+def get_ai_response(user_message, conversation_history=None):
+    messages = [{"role": "system", "content": dev_system_instr}]
+    if conversation_history:
+        messages.extend(conversation_history)
+    messages.append({"role": "user", "content": user_message})
 
-print(completion.choices[0].message.content)
+    completion = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=messages
+    )
+    return completion.choices[0].message.content
