@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { apiService } from "@/services/api";
+import { getCurrentUser } from "@/services/auth";
+
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -39,9 +40,8 @@ function Dashboard() {
     //only runs on initial render of component, since data is not subject to change unless user directly modifies it.
     const fetchUser = async () => {
       try {
-        const { data } = await apiService.getCurrentUser(); //apiService.getCurrentUser() is an async function that returns a promise
-        //when resolved, will return object like {data: ..., response: ...}, {data} is object destructuring in javascript.
-        setUserData(data); // data is the actually parsed JSON object
+        const { data } = await getCurrentUser();
+        setUserData(data);
       } catch (err) {
         setError("Failed to load user data");
       } finally {

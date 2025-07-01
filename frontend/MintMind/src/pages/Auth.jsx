@@ -12,7 +12,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 import SignupModal from "@/components/SignupModal";
-import { apiService } from "@/services/api";
+import { login } from "@/services/auth";
 import { Eye, EyeOff } from "lucide-react";
 
 function Auth() {
@@ -33,7 +33,7 @@ function Auth() {
         password: password,
       };
 
-      const result = await apiService.login(credentials);
+      const result = await login(credentials);
 
       // Extract onboarding status from login response
       const { onboarding_completed, onboarding_step } = result.data;

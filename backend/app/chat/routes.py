@@ -166,12 +166,13 @@ def get_all_conversation_messages(id):
                     "id": msg.id,
                     "sender": msg.sender,
                     "content": msg.content,
-                    "timestamp": msg.created_at.isoformat() if msg.created_at else None, #return string rep of date --> JSON serialization
+                    "timestamp": msg.created_at.isoformat() if msg.created_at else None, #JSON serialization for datetime not DEFAULT
+                    #.isoformat() converts datetime --> '2025-07-01T15:30:00' so that it is readable from frontend when we send response 
                 }
                 for msg in messages_in_convo
             ]
 
-            return jsonify(messages_list), 200
+            return jsonify(messages_list), 200 #messages_list = {{...}, {...}, {....}}
     except Exception as e:
         return jsonify({"error": "Failed to fetch messages"}), 500
 

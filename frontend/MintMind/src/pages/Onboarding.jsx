@@ -7,7 +7,11 @@ import CollegeSlide from "@/components/onboarding/CollegeSlide";
 import ReasonSlide from "@/components/onboarding/ReasonSlide";
 import FinancialSlide from "@/components/onboarding/FinancialSlide";
 import { toast } from "@/hooks/use-toast";
-import { apiService } from "@/services/api";
+import {
+  updateOnboardingStep,
+  completeOnboarding,
+  getOnboardingStatus,
+} from "@/services/onboarding";
 
 const Onboarding = () => {
   const [currentStep, setCurrentStep] = useState(0);
@@ -25,7 +29,7 @@ const Onboarding = () => {
 
   // On mount, fetch onboarding status and set step and data
   useEffect(() => {
-    apiService.getOnboardingStatus().then(({ data }) => {
+    getOnboardingStatus().then(({ data }) => {
       if (data.onboarding_completed) {
         navigate("/dashboard");
       } else if (typeof data.current_step === "number") {
@@ -116,7 +120,7 @@ const Onboarding = () => {
         //   "Data:",
         //   dataToSend
         // );
-        await apiService.updateOnboardingStep(backendStep, dataToSend);
+        await updateOnboardingStep(backendStep, dataToSend);
       }
       setCurrentStep((prev) => prev + 1);
     } catch (err) {
@@ -136,13 +140,13 @@ const Onboarding = () => {
   const completeOnboarding = async () => {
     try {
       // Save the last step (step 6)
-      await apiService.updateOnboardingStep(6, {
+      await updateOnboardingStep(6, {
         salary_monthly: onboardingData.monthlySalary,
         monthly_spending_goal: onboardingData.monthlySpendingGoal,
         total_balance: onboardingData.currentBalance,
       });
       // Mark onboarding as complete
-      await apiService.completeOnboarding();
+      await completeOnboarding();
       toast({
         title: "Welcome to Polarity!",
         description: "Your account has been set up successfully.",

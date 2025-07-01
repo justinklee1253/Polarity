@@ -3,8 +3,9 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 class ApiService {
   constructor() {
     this.isRefreshing = false; //flag for tracking whether token refresh is in progress.
-    //if api service detects expired JWT, tries to refresh.
-    //if multiple request fail at the same time, you don't want to send multiple refresh requests at thge same time.
+    //prevent multiple simultaneous refresh token requests
+    //if many api calls are made at once, and all fail due to expired token it is wasteful--> without flag each one attempts its own /auth/refresh call
+    //ensures only 1 request sent at time, and other calls wait for this to complete
   }
 
   async request(endpoint, options = {}) {
@@ -32,16 +33,16 @@ class ApiService {
       }
 
       if (
-        response.status === 401 &&
+        response.status === 401 && //if unauthorized(expired token), and not already refreshing
         endpoint !== "/auth/refresh" &&
-        endpoint !== "/auth/login" &&
-        !this.isRefreshing
+        endpoint !== "/auth/login" && //if not logging in, since no point in refresh token if user will re-login for new token
+        !this.isRefreshing //not currently refreshing
       ) {
-        //if token expired --> refresh
+        //if token expired --> marks that refresh in progress
         this.isRefreshing = true;
         try {
           console.log("Attempting token refresh");
-          const refreshResult = await this.refreshToken();
+          const refreshResult = await this.refreshToken(); //tries to refresh token
 
           if (refreshResult.data.access_token) {
             localStorage.setItem(
@@ -50,7 +51,7 @@ class ApiService {
             );
 
             config.headers.Authorization = `Bearer ${refreshResult.data.access_token}`;
-            const retryResponse = await fetch(url, config);
+            const retryResponse = await fetch(url, config); //retry original request
             const retryData = await retryResponse.json();
 
             this.isRefreshing = false;
@@ -75,116 +76,6 @@ class ApiService {
       console.log(`API request failed: `, error);
       throw error;
     }
-  }
-  async signup(userData) {
-    return this.request("/auth/signup", {
-      method: "POST",
-      body: JSON.stringify(userData),
-    });
-  }
-
-  async login(credentials) {
-    try {
-      const { data, response } = await this.request("/auth/login", {
-        method: "POST",
-        body: JSON.stringify(credentials),
-      });
-      if (data.access_token) {
-        localStorage.setItem("access_token", data.access_token);
-      }
-      // Store onboarding step for resuming
-      if (!data.onboarding_completed) {
-        localStorage.setItem("onboarding_step", data.onboarding_step || "0");
-        window.location.href = "/onboarding";
-      } else {
-        window.location.href = "/dashboard";
-      }
-      return { data, response };
-    } catch (error) {
-      throw new Error(error.message || "Login failed");
-    }
-  }
-
-  async logout() {
-    const token = localStorage.getItem("access_token");
-    const result = await this.request("/auth/logout", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`, //when logging out, we get access token from LS, then send a request to logout route, so backend knows which user to log out
-        //Header name: `Bearer(type of auth scheme, usually JWT), <token>`: JWT access token you're sending which is usually stored locally/cookie
-      },
-    });
-
-    //if successful
-    localStorage.removeItem("access_token");
-    return result;
-  }
-
-  async getCurrentUser() {
-    const token = localStorage.getItem("access_token"); //getting the access JWT token from browser's localstorage
-    // console.log("Token:", token); DEBUG TO SHOW JWT TOKEN
-    if (!token) {
-      throw new Error("No access token found");
-    }
-    return this.request("/auth/user", {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-  }
-
-  async refreshToken() {
-    if (this.isRefreshing) {
-      throw new Error("Refresh already in progress");
-    }
-
-    return this.request("/auth/refresh", {
-      method: "POST",
-    });
-  }
-
-  async updateOnboardingStep(step, data) {
-    const token = localStorage.getItem("access_token");
-    return this.request(`/onboarding/step/${step}`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    });
-  }
-
-  async completeOnboarding() {
-    const token = localStorage.getItem("access_token");
-    return this.request("/onboarding/complete", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-  }
-  async getOnboardingStatus() {
-    const token = localStorage.getItem("access_token");
-    return this.request("/onboarding/status", {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-  }
-  isAuthenticated() {
-    const token = localStorage.getItem("access_token");
-    return !!token;
-  }
-
-  clearAuth() {
-    localStorage.removeItem("access_token");
-  }
-
-  getToken() {
-    return localStorage.getItem("access_token");
   }
 }
 

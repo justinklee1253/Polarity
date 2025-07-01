@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { apiService } from "../services/api";
+import { getCurrentUser } from "../services/auth";
 
 const ProtectedRoute = ({ children, requireOnboardingComplete = false }) => {
   const [loading, setLoading] = useState(true);
@@ -9,7 +9,7 @@ const ProtectedRoute = ({ children, requireOnboardingComplete = false }) => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const { data } = await apiService.getCurrentUser();
+        const { data } = await getCurrentUser();
         if (!data) {
           navigate("/auth");
           return;

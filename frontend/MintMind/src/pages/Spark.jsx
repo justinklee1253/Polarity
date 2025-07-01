@@ -16,7 +16,7 @@ const Spark = () => {
     if (!hasVisitedSpark) {
       setShowWelcomeModal(true);
       sessionStorage.setItem("hasVisitedSpark", "true");
-    }
+    } //initially sessionStorage is false, and if there is no hasVisitedSpark we will show modal as precaution
 
     // Load conversations from localStorage
     const savedConversations = localStorage.getItem("sparkConversations");
