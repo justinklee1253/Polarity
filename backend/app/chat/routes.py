@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify, current_app, make_response
 from flask_jwt_extended import create_access_token, create_refresh_token, get_jwt, jwt_required, get_jwt_identity
+from datetime import datetime
 from .ai_service import get_ai_response
 from ..database import get_db_session
 from ..models import Conversations, Messages, User
@@ -119,7 +120,7 @@ def send_user_message(id):
     Pass this to LLM --> LLM returns response --> send response back to frontend containing response.
     """
     user_id = get_jwt_identity()
-    request = request.get_json()
+    request = request.get_json() #need to define what this request will look like from frontend
     try:
         with get_db_session() as db:
             convo = db.query(Conversations).filter_by(id=id, user_id=user_id).first()
@@ -129,7 +130,8 @@ def send_user_message(id):
             if not user_message:
                 return jsonify({"error": "No message content found"}), 400
             
-            messages = db.query(Messages).filter_by(conversation_id=convo.id).order_by(Messages.timestamp).all() #get all messages in conversation
+            messages = db.query(Messages).filter_by(conversation_id=convo.id).order_by(Messages.created_at).all() #get all messages in conversation
+            #for context to feed to LLM
             history = []
             for msg in messages: 
                 role = "user" if msg.sender == "user" else "assistant"  #How do we identify sender on the frontend?
@@ -143,4 +145,33 @@ def send_user_message(id):
     except Exception as e:
         return jsonify({"error": "Failed to process message"}), 500
 
+
+@chat_bp.route('/conversations/<int:id>/messages', methods=["GET"])
+@jwt_required()
+def get_all_conversation_messages(id):
+    """
+    When user clicks on conversation, we need to get all messages that are part of that conversation so we can load them in.
+    """
+    user_id = get_jwt_identity()  # JWT token created upon login + identity of it is tied to user_id from db
+    try:
+        with get_db_session() as db:
+            convo = db.query(Conversations).filter_by(id=id, user_id=user_id).first()
+            if not convo:
+                return jsonify({"error": "Conversation not found"}), 404
+
+            messages_in_convo = db.query(Messages).filter_by(conversation_id=convo.id).order_by(Messages.created_at).all()
+
+            messages_list = [
+                {
+                    "id": msg.id,
+                    "sender": msg.sender,
+                    "content": msg.content,
+                    "timestamp": msg.created_at.isoformat() if msg.created_at else None, #return string rep of date --> JSON serialization
+                }
+                for msg in messages_in_convo
+            ]
+
+            return jsonify(messages_list), 200
+    except Exception as e:
+        return jsonify({"error": "Failed to fetch messages"}), 500
 
