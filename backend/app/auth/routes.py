@@ -137,6 +137,7 @@ def login():
                 (User.email == login_identifier) | (User.username == login_identifier)
             ).first()
 
+            #upon logging in: generate JWT token
             if verified_user and bcrypt.checkpw(request_data.get('password').encode('utf-8'), verified_user.password.encode('utf-8')):
                 jwt_access_token = create_access_token(identity=str(verified_user.id))
                 refresh_token = create_refresh_token(identity=str(verified_user.id)) #allows client to obtain new access tokens without user re-auth

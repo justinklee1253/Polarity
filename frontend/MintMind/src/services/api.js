@@ -110,7 +110,8 @@ class ApiService {
     const result = await this.request("/auth/logout", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${token}`, //when logging out, we get access token from LS, then send a request to logout route
+        Authorization: `Bearer ${token}`, //when logging out, we get access token from LS, then send a request to logout route, so backend knows which user to log out
+        //Header name: `Bearer(type of auth scheme, usually JWT), <token>`: JWT access token you're sending which is usually stored locally/cookie
       },
     });
 
