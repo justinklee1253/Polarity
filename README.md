@@ -24,7 +24,7 @@ Polarity provides:
 - 📊 A visual, mobile-friendly **budget dashboard**.
 - ✍️ Easy input for tracking income and expenses.
 - ⏰ **Smart reminders** when users approach their budget limits.
-- 🤖 An AI-powered assistant ("Ask Minty") that gives personal spending advice and budgeting insights.
+- 🤖 An AI-powered assistant ("Ask Spark") that gives personal spending advice and budgeting insights.
 
 ---
 
@@ -34,7 +34,7 @@ Polarity provides:
 - **Onboarding**: Set initial balance, weekly income, and goals. Integrated with Plaid API for secure bank account connection.
 - **Transactions**: Add, edit, delete categorized expenses/income.
 - **Dashboard**: Charts and summaries of user finances.
-- **Ask Minty(Personal AI Finance Assistant) **: Ask “Can I afford to go out this weekend?” or “Where can I cut costs?”, implemented via RAG Pipeline connected to dashboard.
+- **Ask Sparky(Personal AI Finance Assistant) **: Ask “Can I afford to go out this weekend?” or “Where can I cut costs?”, implemented via RAG Pipeline connected to dashboard.
 - **Persistent Storage**: PostgreSQL (NeonDB) database for user data for autosacling, performance, reliability
 
 ---
@@ -136,7 +136,7 @@ How it works:
 
 ## 📈 Future Enhancements
 
-- Full AI chatbot ("Ask Minty") for natural budgeting questions.
+- Full AI chatbot ("Ask Spark") for natural budgeting questions.
 - Anomaly detection for suspicious spending.
 - Budget-sharing mode for roommates.
 - WebSocket updates for live budget sync.
