@@ -54,11 +54,13 @@ def create_app():
     from .routes import main_bp
     from .auth.routes import auth_bp
     from .onboarding.routes import onboarding_bp
+    from .chat.routes import chat_bp
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(onboarding_bp)
-    print("Blueprint 'auth_bp' registered successfully")
-    print("Blueprint 'onboarding' registered successfully")
+    app.register_blueprint(chat_bp)
+    # print("Blueprint 'auth_bp' registered successfully")
+    # print("Blueprint 'onboarding' registered successfully")
 
 
     return app

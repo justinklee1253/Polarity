@@ -3,7 +3,7 @@
 import os
 from openai import OpenAI
 from dotenv import load_dotenv
-from ai_instructions import dev_system_instr
+from .ai_instructions import dev_system_instr
 
 load_dotenv()
 

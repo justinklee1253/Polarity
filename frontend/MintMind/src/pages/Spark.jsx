@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import WelcomeModal from "@/components/WelcomeModal";
 import ConversationSidebar from "@/components/ConversationSidebar";
 import ChatInterface from "@/components/ChatInterface";
+import { create_conversation } from "@/services/chat";
 
 const Spark = () => {
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
@@ -36,11 +37,13 @@ const Spark = () => {
     );
   };
 
-  const handleNewConversation = () => {
+  const handleNewConversation = async () => {
+    //Refactor: call new conversation from service layer
+    const { data } = await create_conversation();
     const newConversation = {
-      id: Date.now().toString(),
-      title: "New conversation",
-      timestamp: Date.now(),
+      id: data.id,
+      title: data.title,
+      timestamp: new Date(data.created_at).getTime(),
       messages: [],
     };
 
