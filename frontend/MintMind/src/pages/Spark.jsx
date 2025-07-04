@@ -2,7 +2,14 @@ import { useState, useEffect } from "react";
 import WelcomeModal from "@/components/WelcomeModal";
 import ConversationSidebar from "@/components/ConversationSidebar";
 import ChatInterface from "@/components/ChatInterface";
-import { create_conversation, get_conversations } from "@/services/chat";
+import {
+  create_conversation,
+  get_conversations,
+  get_conversation_messages,
+  get_specific_conversation,
+  delete_conversation,
+  send_user_message,
+} from "@/services/chat";
 
 const Spark = () => {
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
@@ -11,6 +18,7 @@ const Spark = () => {
   const [activeConversationId, setActiveConversationId] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [messages, setMessages] = useState([]);
 
   // Check if this is the user's first visit in this session
   useEffect(() => {
@@ -46,7 +54,11 @@ const Spark = () => {
         setErrorMessage(msg);
       }
     }
-    fetchConversations();
+    fetchConversations().then(() => {
+      if (conversations.length > 0) {
+        handleSelectConversation(conversations[0].id);
+      }
+    });
   }, []);
 
   const saveConversations = (updatedConversations) => {
@@ -72,122 +84,82 @@ const Spark = () => {
     saveConversations(updatedConversations);
   };
 
-  const handleSelectConversation = (conversationId) => {
+  const handleSelectConversation = async (conversationId) => {
     setActiveConversationId(conversationId);
+    setIsLoading(true);
+    try {
+      const { data } = await get_conversation_messages(conversationId);
+      const formattedMessages = data.map((msg) => ({
+        id: msg.id,
+        text: msg.content,
+        isBot: msg.sender !== "user",
+        timestamp: msg.timestamp,
+      }));
+      setMessages(formattedMessages);
+    } catch (error) {
+      setMessages([]);
+    }
+    setIsLoading(false);
   };
 
-  const handleDeleteConversation = (conversationId) => {
-    const updatedConversations = conversations.filter(
-      (conv) => conv.id !== conversationId
-    );
-    setConversations(updatedConversations);
+  const handleDeleteConversation = async (conversationId) => {
+    try {
+      await delete_conversation(conversationId);
+      // Remove from local state
+      const updatedConversations = conversations.filter(
+        (conv) => conv.id !== conversationId
+      );
+      setConversations(updatedConversations);
 
-    if (activeConversationId === conversationId) {
-      if (updatedConversations.length > 0) {
-        setActiveConversationId(updatedConversations[0].id);
-      } else {
-        setActiveConversationId(null);
+      // If the deleted conversation was active, select the next one
+      if (activeConversationId === conversationId) {
+        if (updatedConversations.length > 0) {
+          setActiveConversationId(updatedConversations[0].id);
+        } else {
+          setActiveConversationId(null);
+        }
       }
+      // Optionally clear messages if the active conversation was deleted
+      // setMessages([]);
+    } catch (error) {
+      // Optionally show an error message
+      setErrorMessage("Failed to delete conversation.");
     }
-
-    saveConversations(updatedConversations);
   };
 
   const handleSendMessage = async (messageText) => {
-    if (!messageText.trim()) return;
+    if (!activeConversationId || !messageText.trim()) return;
 
-    let currentConversationId = activeConversationId;
-
-    // If no active conversation, create a new one
-    if (!currentConversationId) {
-      const newConversation = {
-        id: Date.now().toString(),
-        title:
-          messageText.slice(0, 50) + (messageText.length > 50 ? "..." : ""),
-        timestamp: Date.now(),
-        messages: [],
-      };
-
-      const updatedConversations = [newConversation, ...conversations];
-      setConversations(updatedConversations);
-      setActiveConversationId(newConversation.id);
-      currentConversationId = newConversation.id;
-      saveConversations(updatedConversations);
-    }
-
+    // Optimistically add the user's message to the UI
     const userMessage = {
       id: Date.now(),
       text: messageText,
       isBot: false,
-      timestamp: Date.now(),
+      timestamp: new Date().toISOString(),
     };
-
-    // Update conversation with user message
-    const updatedConversations = conversations.map((conv) => {
-      if (conv.id === currentConversationId) {
-        const updatedMessages = [...conv.messages, userMessage];
-        // Update title if this is the first message
-        const title =
-          conv.messages.length === 0
-            ? messageText.slice(0, 50) + (messageText.length > 50 ? "..." : "")
-            : conv.title;
-
-        return {
-          ...conv,
-          messages: updatedMessages,
-          title,
-          timestamp: Date.now(),
-        };
-      }
-      return conv;
-    });
-
-    // If this is a new conversation not yet in the array
-    if (!conversations.find((conv) => conv.id === currentConversationId)) {
-      const newConv = {
-        id: currentConversationId,
-        title:
-          messageText.slice(0, 50) + (messageText.length > 50 ? "..." : ""),
-        timestamp: Date.now(),
-        messages: [userMessage],
-      };
-      updatedConversations.unshift(newConv);
-    }
-
-    setConversations(updatedConversations);
-    saveConversations(updatedConversations);
+    setMessages((prev) => [...prev, userMessage]);
     setIsLoading(true);
 
-    // Simulate AI response
-    setTimeout(() => {
-      const botMessage = {
-        id: Date.now() + 1,
-        text: "I understand you're looking for financial advice. While I'm still learning about your specific situation, I can help you with general budgeting tips, savings strategies, and financial planning. What specific area would you like to focus on?",
-        isBot: true,
-        timestamp: Date.now(),
-      };
-
-      const finalConversations = updatedConversations.map((conv) => {
-        if (conv.id === currentConversationId) {
-          return {
-            ...conv,
-            messages: [...conv.messages, botMessage],
-            timestamp: Date.now(),
-          };
-        }
-        return conv;
-      });
-
-      setConversations(finalConversations);
-      saveConversations(finalConversations);
-      setIsLoading(false);
-    }, 1500);
+    try {
+      await send_user_message(activeConversationId, messageText);
+      // After sending, fetch the updated message list from backend
+      const { data } = await get_conversation_messages(activeConversationId);
+      const formattedMessages = data.map((msg) => ({
+        id: msg.id,
+        text: msg.content,
+        isBot: msg.sender !== "user",
+        timestamp: msg.timestamp,
+      }));
+      setMessages(formattedMessages);
+    } catch (error) {
+      // Optionally show an error message
+    }
+    setIsLoading(false);
   };
 
   const activeConversation = conversations.find(
     (conv) => conv.id === activeConversationId
   );
-  const messages = activeConversation?.messages ?? [];
   const isNewConversation = !activeConversation || messages.length === 0;
 
   return (
@@ -212,7 +184,7 @@ const Spark = () => {
         messages={messages}
         onSendMessage={handleSendMessage}
         isLoading={isLoading}
-        isNewConversation={isNewConversation}
+        isNewConversation={messages.length === 0}
       />
 
       {errorMessage && (

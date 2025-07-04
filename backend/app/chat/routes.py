@@ -114,35 +114,54 @@ def delete_conversation(id):
 @chat_bp.route('/conversations/<int:id>/messages', methods=["POST"])
 @jwt_required()
 def send_user_message(id):
-    """
-    Based on the conversation specified by the frontend request, 
-    User sends message in textbox --> hit this route to get message from user + which convo it's in.
-    Pass this to LLM --> LLM returns response --> send response back to frontend containing response.
-    """
     user_id = get_jwt_identity()
-    request = request.get_json() #need to define what this request will look like from frontend
+    data = request.get_json()
     try:
         with get_db_session() as db:
             convo = db.query(Conversations).filter_by(id=id, user_id=user_id).first()
             if not convo:
                 return jsonify({"error": "Conversation not found"}), 404
-            user_message = request.get('message')
+            user_message = data.get('message')
             if not user_message:
                 return jsonify({"error": "No message content found"}), 400
-            
-            messages = db.query(Messages).filter_by(conversation_id=convo.id).order_by(Messages.created_at).all() #get all messages in conversation
-            #for context to feed to LLM
+
+            # Save user message
+            user_msg_obj = Messages(
+                convo_id=convo.id,
+                sender="user",
+                content=user_message
+            )
+            db.add(user_msg_obj)
+            db.commit()
+            db.refresh(user_msg_obj)
+
+            # Build history for LLM
+            messages = db.query(Messages).filter_by(convo_id=convo.id).order_by(Messages.created_at).all()
             history = []
-            for msg in messages: 
-                role = "user" if msg.sender == "user" else "assistant"  #How do we identify sender on the frontend?
+            for msg in messages:
+                role = "user" if msg.sender == "user" else "assistant"
                 history.append({"role": role, "content": msg.content})
-            
-            history.append({"role": "user", "content": user_message})
-            
+
+            # Get LLM response
             ai_response = get_ai_response(user_message, conversation_history=history)
+
+            # Save AI response
+            ai_msg_obj = Messages(
+                convo_id=convo.id,
+                sender="assistant",
+                content=ai_response
+            )
+            db.add(ai_msg_obj)
+            db.commit()
+            db.refresh(ai_msg_obj)
+
+            # Update conversation's last_modified
+            convo.last_modified = ai_msg_obj.created_at
+            db.commit()
 
             return jsonify({"response": ai_response}), 200
     except Exception as e:
+        print("Error in send_user_message:", e)
         return jsonify({"error": "Failed to process message"}), 500
 
 
@@ -159,7 +178,7 @@ def get_all_conversation_messages(id):
             if not convo:
                 return jsonify({"error": "Conversation not found"}), 404
 
-            messages_in_convo = db.query(Messages).filter_by(conversation_id=convo.id).order_by(Messages.created_at).all()
+            messages_in_convo = db.query(Messages).filter_by(convo_id=convo.id).order_by(Messages.created_at).all()
 
             messages_list = [
                 {

@@ -4,6 +4,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Sparkles, TrendingUp, PiggyBank, Brain } from "lucide-react";
@@ -19,6 +20,9 @@ const WelcomeModal = ({ isOpen, onClose, userName = "there" }) => {
           <DialogTitle className="text-3xl font-bold bg-gradient-to-br from-sky-600 via-cyan-600 to-blue-700 bg-clip-text text-transparent mb-2">
             Welcome, {userName}! 👋
           </DialogTitle>
+          <DialogDescription>
+            This is a welcome message for new users.
+          </DialogDescription>
           <p className="text-lg text-gray-600 font-medium">
             Meet <span className="text-sky-600 font-bold">Spark</span> – Your
             Smart Money Mentor

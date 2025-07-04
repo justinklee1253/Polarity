@@ -27,3 +27,45 @@ export async function get_conversations() {
     },
   });
 }
+
+export async function get_specific_conversation(id) {
+  const token = localStorage.getItem("access_token");
+  return apiService.request(`/chat/conversations/${id}`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+}
+
+export async function get_conversation_messages(id) {
+  const token = localStorage.getItem("access_token");
+  return apiService.request(`/chat/conversations/${id}/messages`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+}
+
+export async function delete_conversation(id) {
+  const token = localStorage.getItem("access_token");
+  return apiService.request(`/chat/conversations/${id}`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+}
+
+export async function send_user_message(conversationId, message) {
+  const token = localStorage.getItem("access_token");
+  return apiService.request(`/chat/conversations/${conversationId}/messages`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ message }),
+  });
+}
