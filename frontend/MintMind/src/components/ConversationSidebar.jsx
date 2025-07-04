@@ -16,7 +16,9 @@ const ConversationSidebar = ({
   const [hoveredId, setHoveredId] = useState(null);
 
   const formatTimestamp = (timestamp) => {
+    if (!timestamp) return "N/A";
     const date = new Date(timestamp);
+    if (isNaN(date)) return "N/A";
     const now = new Date();
     const diffInHours = (now - date) / (1000 * 60 * 60);
 
@@ -89,6 +91,7 @@ const ConversationSidebar = ({
 
       <ScrollArea className="flex-1">
         <div className="p-2">
+          {/* Either there are no conversations --> or we map each conversation*/}
           {conversations.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               <MessageSquare className="h-8 w-8 mx-auto mb-2 opacity-50" />
@@ -115,7 +118,11 @@ const ConversationSidebar = ({
                         {conversation.title}
                       </p>
                       <p className="text-xs text-gray-500 mt-1">
-                        {formatTimestamp(conversation.timestamp)}
+                        Created: {formatTimestamp(conversation.created_at)}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Last message:{" "}
+                        {formatTimestamp(conversation.last_modified)}
                       </p>
                     </div>
                     {hoveredId === conversation.id && (

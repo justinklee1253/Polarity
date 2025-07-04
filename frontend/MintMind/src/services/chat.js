@@ -1,5 +1,6 @@
 //Frontend Service Layer for our chat
 
+import Auth from "@/pages/Auth";
 import { apiService } from "./api";
 
 export async function create_conversation(title) {
@@ -14,5 +15,15 @@ export async function create_conversation(title) {
       "Content-Type": "application/json",
     },
     body: JSON.stringify(body),
+  });
+}
+
+export async function get_conversations() {
+  const token = localStorage.getItem("access_token");
+  return apiService.request("/chat/conversations", {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
   });
 }

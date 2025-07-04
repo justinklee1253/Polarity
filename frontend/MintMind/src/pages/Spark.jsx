@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import WelcomeModal from "@/components/WelcomeModal";
 import ConversationSidebar from "@/components/ConversationSidebar";
 import ChatInterface from "@/components/ChatInterface";
-import { create_conversation } from "@/services/chat";
+import { create_conversation, get_conversations } from "@/services/chat";
 
 const Spark = () => {
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
@@ -10,6 +10,7 @@ const Spark = () => {
   const [conversations, setConversations] = useState([]);
   const [activeConversationId, setActiveConversationId] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   // Check if this is the user's first visit in this session
   useEffect(() => {
@@ -19,15 +20,33 @@ const Spark = () => {
       sessionStorage.setItem("hasVisitedSpark", "true");
     } //initially sessionStorage is false, and if there is no hasVisitedSpark we will show modal as precaution
 
-    // Load conversations from localStorage
-    const savedConversations = localStorage.getItem("sparkConversations");
-    if (savedConversations) {
-      const parsed = JSON.parse(savedConversations);
-      setConversations(parsed);
-      if (parsed.length > 0) {
-        setActiveConversationId(parsed[0].id);
+    //Load conversations from backend server
+    async function fetchConversations() {
+      try {
+        const { data } = await get_conversations();
+        const sorted = [...data].sort(
+          (a, b) => new Date(b.last_modified) - new Date(a.last_modified)
+        );
+        setConversations(sorted);
+        if (sorted.length > 0) {
+          setActiveConversationId(sorted[0].id);
+        }
+        setErrorMessage("");
+      } catch (error) {
+        let msg = "Failed to load conversations.";
+
+        if (
+          error.response &&
+          error.response.data &&
+          error.response.data.error
+        ) {
+          msg = error.response.data.error;
+        }
+
+        setErrorMessage(msg);
       }
     }
+    fetchConversations();
   }, []);
 
   const saveConversations = (updatedConversations) => {
@@ -39,7 +58,7 @@ const Spark = () => {
 
   const handleNewConversation = async () => {
     //Refactor: call new conversation from service layer
-    const { data } = await create_conversation();
+    const { data } = await create_conversation(); //destructures our response, storing it in data
     const newConversation = {
       id: data.id,
       title: data.title,
@@ -168,7 +187,7 @@ const Spark = () => {
   const activeConversation = conversations.find(
     (conv) => conv.id === activeConversationId
   );
-  const messages = activeConversation ? activeConversation.messages : [];
+  const messages = activeConversation?.messages ?? [];
   const isNewConversation = !activeConversation || messages.length === 0;
 
   return (
@@ -195,6 +214,10 @@ const Spark = () => {
         isLoading={isLoading}
         isNewConversation={isNewConversation}
       />
+
+      {errorMessage && (
+        <div className="text-red-500 text-center py-2">{errorMessage}</div>
+      )}
     </div>
   );
 };
