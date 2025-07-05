@@ -4,6 +4,7 @@ from datetime import datetime
 from .ai_service import get_ai_response
 from ..database import get_db_session
 from ..models import Conversations, Messages, User
+import re
 
 chat_bp = Blueprint('chat', __name__, url_prefix='/chat')
 
@@ -25,8 +26,16 @@ def create_conversation():
             data = request.get_json() or {}
             title = data.get('title')
             if not title:
-                count = db.query(Conversations).filter_by(user_id=user_id).count() + 1
-                title = f"New Conversation {count}"
+                # Get all titles for this user that match the pattern
+                existing_titles = db.query(Conversations.title).filter_by(user_id=user_id).all()
+                max_num = 0
+                for (title_str,) in existing_titles:
+                    match = re.match(r"New Conversation (\d+)", title_str)
+                    if match:
+                        num = int(match.group(1))
+                        if num > max_num:
+                            max_num = num
+                title = f"New Conversation {max_num + 1}"
             
             #user is found, we have conversations.user_id as a FK referencing users.id. We want to create new convo tied to user
             new_convo = Conversations(

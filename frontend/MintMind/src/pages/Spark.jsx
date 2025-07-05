@@ -20,6 +20,31 @@ const Spark = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const [messages, setMessages] = useState([]);
 
+  // Function to fetch and update conversations
+  const fetchConversations = async () => {
+    try {
+      const { data } = await get_conversations();
+      const sorted = [...data].sort(
+        (a, b) => new Date(b.last_modified) - new Date(a.last_modified)
+      );
+      setConversations(sorted);
+      if (sorted.length > 0 && !activeConversationId) {
+        setActiveConversationId(sorted[0].id);
+      }
+      setErrorMessage("");
+      return sorted;
+    } catch (error) {
+      let msg = "Failed to load conversations.";
+
+      if (error.response && error.response.data && error.response.data.error) {
+        msg = error.response.data.error;
+      }
+
+      setErrorMessage(msg);
+      return [];
+    }
+  };
+
   // Check if this is the user's first visit in this session
   useEffect(() => {
     const hasVisitedSpark = sessionStorage.getItem("hasVisitedSpark");
@@ -29,59 +54,25 @@ const Spark = () => {
     } //initially sessionStorage is false, and if there is no hasVisitedSpark we will show modal as precaution
 
     //Load conversations from backend server
-    async function fetchConversations() {
-      try {
-        const { data } = await get_conversations();
-        const sorted = [...data].sort(
-          (a, b) => new Date(b.last_modified) - new Date(a.last_modified)
-        );
-        setConversations(sorted);
-        if (sorted.length > 0) {
-          setActiveConversationId(sorted[0].id);
-        }
-        setErrorMessage("");
-      } catch (error) {
-        let msg = "Failed to load conversations.";
-
-        if (
-          error.response &&
-          error.response.data &&
-          error.response.data.error
-        ) {
-          msg = error.response.data.error;
-        }
-
-        setErrorMessage(msg);
-      }
-    }
-    fetchConversations().then(() => {
-      if (conversations.length > 0) {
-        handleSelectConversation(conversations[0].id);
+    fetchConversations().then((sorted) => {
+      if (sorted.length > 0) {
+        handleSelectConversation(sorted[0].id);
       }
     });
   }, []);
 
-  const saveConversations = (updatedConversations) => {
-    localStorage.setItem(
-      "sparkConversations",
-      JSON.stringify(updatedConversations)
-    );
-  };
-
   const handleNewConversation = async () => {
-    //Refactor: call new conversation from service layer
-    const { data } = await create_conversation(); //destructures our response, storing it in data
-    const newConversation = {
-      id: data.id,
-      title: data.title,
-      timestamp: new Date(data.created_at).getTime(),
-      messages: [],
-    };
+    try {
+      //Refactor: call new conversation from service layer
+      const { data } = await create_conversation(); //destructures our response, storing it in data
 
-    const updatedConversations = [newConversation, ...conversations];
-    setConversations(updatedConversations);
-    setActiveConversationId(newConversation.id);
-    saveConversations(updatedConversations);
+      // Refresh conversations list to get the updated data from backend
+      await fetchConversations();
+      setActiveConversationId(data.id);
+      setMessages([]); // Clear messages for new conversation
+    } catch (error) {
+      setErrorMessage("Failed to create new conversation.");
+    }
   };
 
   const handleSelectConversation = async (conversationId) => {
@@ -105,11 +96,9 @@ const Spark = () => {
   const handleDeleteConversation = async (conversationId) => {
     try {
       await delete_conversation(conversationId);
-      // Remove from local state
-      const updatedConversations = conversations.filter(
-        (conv) => conv.id !== conversationId
-      );
-      setConversations(updatedConversations);
+
+      // Refresh conversations list from backend
+      const updatedConversations = await fetchConversations();
 
       // If the deleted conversation was active, select the next one
       if (activeConversationId === conversationId) {
@@ -117,10 +106,9 @@ const Spark = () => {
           setActiveConversationId(updatedConversations[0].id);
         } else {
           setActiveConversationId(null);
+          setMessages([]);
         }
       }
-      // Optionally clear messages if the active conversation was deleted
-      // setMessages([]);
     } catch (error) {
       // Optionally show an error message
       setErrorMessage("Failed to delete conversation.");
@@ -142,9 +130,15 @@ const Spark = () => {
 
     try {
       await send_user_message(activeConversationId, messageText);
-      // After sending, fetch the updated message list from backend
-      const { data } = await get_conversation_messages(activeConversationId);
-      const formattedMessages = data.map((msg) => ({
+
+      // After sending, fetch both the updated message list and refresh conversations
+      const [messagesResponse] = await Promise.all([
+        get_conversation_messages(activeConversationId),
+        fetchConversations(),
+      ]);
+
+      // Update messages
+      const formattedMessages = messagesResponse.data.map((msg) => ({
         id: msg.id,
         text: msg.content,
         isBot: msg.sender !== "user",
@@ -163,11 +157,11 @@ const Spark = () => {
   const isNewConversation = !activeConversation || messages.length === 0;
 
   return (
-    <div className="h-screen flex bg-gray-50">
+    <div className="h-screen min-h-0 flex bg-gray-50 overflow-hidden p-0 m-0">
       <WelcomeModal
         isOpen={showWelcomeModal}
         onClose={() => setShowWelcomeModal(false)}
-        userName="Student" // You can replace this with actual user name from context/props
+        userName="Student"
       />
 
       <ConversationSidebar
@@ -180,16 +174,17 @@ const Spark = () => {
         onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
       />
 
-      <ChatInterface
-        messages={messages}
-        onSendMessage={handleSendMessage}
-        isLoading={isLoading}
-        isNewConversation={messages.length === 0}
-      />
-
-      {errorMessage && (
-        <div className="text-red-500 text-center py-2">{errorMessage}</div>
-      )}
+      <div className="flex-1 h-full min-h-0 flex flex-col">
+        <ChatInterface
+          messages={messages}
+          onSendMessage={handleSendMessage}
+          isLoading={isLoading}
+          isNewConversation={messages.length === 0}
+        />
+        {errorMessage && (
+          <div className="text-red-500 text-center py-2">{errorMessage}</div>
+        )}
+      </div>
     </div>
   );
 };

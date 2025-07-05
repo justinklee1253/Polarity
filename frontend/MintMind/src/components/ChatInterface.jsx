@@ -89,7 +89,7 @@ const ChatInterface = ({
   };
 
   return (
-    <div className="flex-1 flex flex-col bg-gradient-to-br from-gray-50 to-white h-screen">
+    <div className="flex flex-col h-full w-full">
       {isNewConversation && messages.length === 0 ? (
         <EmptyState
           inputMessage={inputMessage}
@@ -101,63 +101,63 @@ const ChatInterface = ({
         />
       ) : (
         <>
-          {/* ... keep existing code (ScrollArea with messages and loading state) */}
-          <ScrollArea className="flex-1 p-6">
-            <div className="max-w-3xl mx-auto space-y-6">
-              {messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={`flex gap-4 ${
-                    message.isBot ? "justify-start" : "justify-end"
-                  }`}
-                >
-                  {message.isBot && (
-                    <div className="w-8 h-8 bg-gradient-to-r from-sky-500 to-cyan-500 rounded-full flex items-center justify-center flex-shrink-0">
-                      <Bot className="h-4 w-4 text-white" />
-                    </div>
-                  )}
+          <div className="flex-1 min-h-0 overflow-y-auto">
+            <ScrollArea className="h-full p-6">
+              <div className="max-w-3xl mx-auto space-y-6">
+                {messages.map((message) => (
                   <div
-                    className={`max-w-[70%] p-4 rounded-2xl ${
-                      message.isBot
-                        ? "bg-white border border-gray-200 text-gray-800"
-                        : "bg-gradient-to-r from-sky-500 to-cyan-500 text-white ml-auto"
+                    key={message.id}
+                    className={`flex gap-4 ${
+                      message.isBot ? "justify-start" : "justify-end"
                     }`}
                   >
-                    <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                      {message.text}
-                    </p>
-                  </div>
-                  {!message.isBot && (
-                    <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
-                      <User className="h-4 w-4 text-gray-600" />
+                    {message.isBot && (
+                      <div className="w-8 h-8 bg-gradient-to-r from-sky-500 to-cyan-500 rounded-full flex items-center justify-center flex-shrink-0">
+                        <Bot className="h-4 w-4 text-white" />
+                      </div>
+                    )}
+                    <div
+                      className={`max-w-[70%] p-4 rounded-2xl ${
+                        message.isBot
+                          ? "bg-white border border-gray-200 text-gray-800"
+                          : "bg-gradient-to-r from-sky-500 to-cyan-500 text-white ml-auto"
+                      }`}
+                    >
+                      <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                        {message.text}
+                      </p>
                     </div>
-                  )}
-                </div>
-              ))}
-              {isLoading && (
-                <div className="flex gap-4 justify-start">
-                  <div className="w-8 h-8 bg-gradient-to-r from-sky-500 to-cyan-500 rounded-full flex items-center justify-center">
-                    <Bot className="h-4 w-4 text-white" />
+                    {!message.isBot && (
+                      <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
+                        <User className="h-4 w-4 text-gray-600" />
+                      </div>
+                    )}
                   </div>
-                  <div className="bg-white border border-gray-200 p-4 rounded-2xl">
-                    <div className="flex space-x-1">
-                      <div className="w-2 h-2 bg-sky-500 rounded-full animate-bounce"></div>
-                      <div
-                        className="w-2 h-2 bg-sky-500 rounded-full animate-bounce"
-                        style={{ animationDelay: "0.1s" }}
-                      ></div>
-                      <div
-                        className="w-2 h-2 bg-sky-500 rounded-full animate-bounce"
-                        style={{ animationDelay: "0.2s" }}
-                      ></div>
+                ))}
+                {isLoading && (
+                  <div className="flex gap-4 justify-start">
+                    <div className="w-8 h-8 bg-gradient-to-r from-sky-500 to-cyan-500 rounded-full flex items-center justify-center">
+                      <Bot className="h-4 w-4 text-white" />
+                    </div>
+                    <div className="bg-white border border-gray-200 p-4 rounded-2xl">
+                      <div className="flex space-x-1">
+                        <div className="w-2 h-2 bg-sky-500 rounded-full animate-bounce"></div>
+                        <div
+                          className="w-2 h-2 bg-sky-500 rounded-full animate-bounce"
+                          style={{ animationDelay: "0.1s" }}
+                        ></div>
+                        <div
+                          className="w-2 h-2 bg-sky-500 rounded-full animate-bounce"
+                          style={{ animationDelay: "0.2s" }}
+                        ></div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
-            </div>
-          </ScrollArea>
+                )}
+              </div>
+            </ScrollArea>
+          </div>
 
-          {/* Fixed input area at bottom for conversations */}
           <div className="flex-shrink-0 border-t border-gray-200 bg-white/95 backdrop-blur-sm">
             <div className="max-w-3xl mx-auto p-6">
               <div className="relative">
