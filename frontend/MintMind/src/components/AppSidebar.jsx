@@ -108,19 +108,15 @@ export function AppSidebar() {
         {isCollapsed ? (
           <>
             {/* Collapsed Header */}
-            <SidebarHeader className="p-4 flex items-center justify-center">
+            <SidebarHeader className="p-4 flex flex-col items-center justify-center gap-2">
               <div className="w-8 h-8 bg-gradient-to-r from-sky-500 to-cyan-500 rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-sm">P</span>
               </div>
-            </SidebarHeader>
-
-            {/* Collapsed Content */}
-            <SidebarContent className="flex-1 flex flex-col items-center gap-2 px-2">
               {/* User Avatar */}
               <TooltipProvider delayDuration={0}>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <div className="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-sky-50 cursor-pointer">
+                    <div className="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-sky-50 cursor-pointer mt-4">
                       <Avatar className="h-8 w-8">
                         <AvatarFallback className="bg-gradient-to-r from-sky-500 to-cyan-500 text-white text-sm">
                           <UserRound className="h-4 w-4" />
@@ -133,10 +129,25 @@ export function AppSidebar() {
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
-
-              <div className="w-full h-px bg-gray-200 my-2" />
-
-              {/* Navigation Icons */}
+              {/* Expand Button below avatar */}
+              <TooltipProvider delayDuration={0}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={toggleSidebar}
+                      className="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-600 transition-colors mt-2"
+                    >
+                      <PanelRight className="h-5 w-5" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="right" className="ml-2">
+                    Expand Sidebar
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </SidebarHeader>
+            {/* Collapsed Content: Navigation Icons */}
+            <SidebarContent className="flex-1 flex flex-col items-center gap-2 px-2 mt-4">
               {menuItems.map((item) => (
                 <TooltipProvider key={item.title} delayDuration={0}>
                   <Tooltip>
@@ -159,12 +170,9 @@ export function AppSidebar() {
                 </TooltipProvider>
               ))}
             </SidebarContent>
-
-            {/* Collapsed Footer */}
+            {/* Collapsed Footer: Logout Button */}
             <SidebarFooter className="p-4 flex flex-col items-center gap-2">
               <div className="w-full h-px bg-gray-200 mb-2" />
-
-              {/* Logout Button */}
               <TooltipProvider delayDuration={0}>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -178,23 +186,6 @@ export function AppSidebar() {
                   </TooltipTrigger>
                   <TooltipContent side="right" className="ml-2">
                     {isLoggingOut ? "Logging out..." : "Logout"}
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-
-              {/* Expand Button */}
-              <TooltipProvider delayDuration={0}>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      onClick={toggleSidebar}
-                      className="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-600 transition-colors"
-                    >
-                      <PanelRight className="h-5 w-5" />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent side="right" className="ml-2">
-                    Expand Sidebar
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -254,7 +245,7 @@ export function AppSidebar() {
             </SidebarHeader>
 
             {/* Expanded Content */}
-            <SidebarContent>
+            <SidebarContent className="mt-16">
               <SidebarGroup>
                 <SidebarGroupContent>
                   <SidebarMenu>

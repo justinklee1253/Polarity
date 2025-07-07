@@ -11,9 +11,6 @@ export function Layout({ children }) {
       <div className="min-h-screen flex w-full">
         <AppSidebar />
         <SidebarInset className="flex-1">
-          {/* <div className="flex items-center gap-4 p-4 border-b bg-white/80 backdrop-blur-sm">
-            <SidebarTrigger className="shrink-0" />
-          </div> */}
           <main className="flex-1">{children}</main>
         </SidebarInset>
       </div>
