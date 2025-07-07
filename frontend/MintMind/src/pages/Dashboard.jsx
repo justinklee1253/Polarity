@@ -127,13 +127,12 @@ function Dashboard() {
     <div className="p-6">
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-sky-600 to-cyan-600 bg-clip-text text-transparent">
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-sky-600 to-cyan-600 bg-clip-text text-transparent ml-8 mt-4">
             Welcome back, {userData.name || userData.username}! 👋
           </h1>
-          <p className="text-gray-600 mt-1 flex items-center gap-2">
+          <p className="text-gray-600 mt-1 flex items-center gap-2 ml-8">
             <GraduationCap className="h-4 w-4" />
-            {profile_info.college_name || "College Student"} • Ready to manage
-            your finances?
+            {profile_info.college_name || "College Student"}
           </p>
         </div>
       </div>

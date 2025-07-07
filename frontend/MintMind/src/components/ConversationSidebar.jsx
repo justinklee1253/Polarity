@@ -12,6 +12,7 @@ const ConversationSidebar = ({
   onDeleteConversation,
   isCollapsed,
   onToggleCollapse,
+  appSidebarCollapsed = false, // Add this prop to know AppSidebar state
 }) => {
   const [hoveredId, setHoveredId] = useState(null);
 
@@ -35,9 +36,26 @@ const ConversationSidebar = ({
     }
   };
 
+  // Generate a better title from the conversation or use a default
+  const getConversationTitle = (conversation) => {
+    if (conversation.title && conversation.title.trim() !== "") {
+      return conversation.title;
+    }
+    // If no title, create one from the conversation ID or use a default
+    return `Conversation ${conversation.id}`;
+  };
+
+  // Calculate dynamic margin based on AppSidebar state
+  const sidebarMargin = appSidebarCollapsed ? "ml-0" : "ml-6"; // Adjust left margin based on AppSidebar width
+
   if (isCollapsed) {
     return (
-      <div className="w-16 bg-white/80 backdrop-blur-sm border-r border-gray-200 flex flex-col items-center py-4">
+      <div
+        className={cn(
+          "w-16 bg-white/80 backdrop-blur-sm border-r border-gray-200 flex flex-col items-center py-4",
+          sidebarMargin
+        )}
+      >
         <Button
           variant="ghost"
           size="sm"
@@ -59,7 +77,12 @@ const ConversationSidebar = ({
   }
 
   return (
-    <div className="w-80 bg-white/80 backdrop-blur-sm border-r border-gray-200 flex flex-col">
+    <div
+      className={cn(
+        "w-80 bg-white/80 backdrop-blur-sm border-r border-gray-200 flex flex-col transition-all duration-300 ease-in-out",
+        sidebarMargin
+      )}
+    >
       <div className="p-4 border-b border-gray-200">
         <div className="flex items-center justify-between mb-3">
           <Button
@@ -91,53 +114,55 @@ const ConversationSidebar = ({
 
       <ScrollArea className="flex-1">
         <div className="p-2">
-          {/* Either there are no conversations --> or we map each conversation*/}
           {conversations.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               <MessageSquare className="h-8 w-8 mx-auto mb-2 opacity-50" />
               <p className="text-sm">No conversations yet</p>
             </div>
           ) : (
-            <div className="space-y-1">
+            <div className="space-y-2">
               {conversations.map((conversation) => (
                 <div
                   key={conversation.id}
                   className={cn(
-                    "group relative p-3 rounded-lg cursor-pointer transition-all",
+                    "group relative p-3 rounded-lg cursor-pointer transition-all hover:shadow-sm",
                     activeConversationId === conversation.id
-                      ? "bg-sky-100 border border-sky-200"
-                      : "hover:bg-gray-50"
+                      ? "bg-sky-100 border border-sky-200 shadow-sm"
+                      : "hover:bg-gray-50 border border-transparent"
                   )}
                   onClick={() => onSelectConversation(conversation.id)}
                   onMouseEnter={() => setHoveredId(conversation.id)}
                   onMouseLeave={() => setHoveredId(null)}
                 >
                   <div className="flex items-start justify-between">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-800 truncate">
-                        {conversation.title}
-                      </p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        Created: {formatTimestamp(conversation.created_at)}
-                      </p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        Last message:{" "}
-                        {formatTimestamp(conversation.last_modified)}
-                      </p>
+                    <div className="flex-1 min-w-0 pr-2">
+                      <div className="flex items-center justify-between mb-1">
+                        <p className="text-sm font-medium text-gray-800 truncate">
+                          {getConversationTitle(conversation)}
+                        </p>
+                        {hoveredId === conversation.id && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onDeleteConversation(conversation.id);
+                            }}
+                            className="p-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity ml-2 hover:bg-red-50 hover:text-red-600"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        )}
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-xs text-gray-500">
+                          Created: {formatTimestamp(conversation.created_at)}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          Updated: {formatTimestamp(conversation.last_modified)}
+                        </p>
+                      </div>
                     </div>
-                    {hoveredId === conversation.id && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onDeleteConversation(conversation.id);
-                        }}
-                        className="p-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                    )}
                   </div>
                 </div>
               ))}
