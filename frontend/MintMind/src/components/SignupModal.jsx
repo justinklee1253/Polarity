@@ -12,6 +12,7 @@ import {
 import { toast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { apiService } from "@/services/api";
+import { signup } from "@/services/auth";
 
 function SignupModal({ isOpen, onClose }) {
   const [formData, setFormData] = useState({
@@ -61,7 +62,7 @@ function SignupModal({ isOpen, onClose }) {
 
       //API Call
 
-      const { data } = await apiService.signup(signupData);
+      const { data } = await signup(signupData);
 
       toast({
         title: "Account created successfully!",

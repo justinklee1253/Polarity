@@ -55,10 +55,14 @@ def create_app():
     from .auth.routes import auth_bp
     from .onboarding.routes import onboarding_bp
     from .chat.routes import chat_bp
+    from .plaid.routes import plaid_bp
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(onboarding_bp)
     app.register_blueprint(chat_bp)
+    app.register_blueprint(plaid_bp)
+
+    
     # print("Blueprint 'auth_bp' registered successfully")
     # print("Blueprint 'onboarding' registered successfully")
 

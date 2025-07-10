@@ -26,3 +26,10 @@ class Config:
 
     OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 
+    PLAID_CLIENT_ID = os.getenv('PLAID_CLIENT_ID')
+    PLAID_SECRET = os.getenv('PLAID_SECRET')
+    PLAID_ENV = os.getenv('PLAID_ENV', 'sandbox')
+    # PLAID_PRODUCTS = os.getenv('PLAID_PRODUCTS', 'transactions').split(',')
+    # PLAID_COUNTRY_CODES = os.getenv('PLAID_COUNTRY_CODES', 'US').split(',')
+
+

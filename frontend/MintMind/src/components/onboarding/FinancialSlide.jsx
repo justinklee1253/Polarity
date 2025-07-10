@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { usePlaidLink } from "react-plaid-link";
+import { createPlaidLinkToken } from "@/services/plaid";
 
 const FinancialSlide = ({ onComplete, onPrev, onDataUpdate, data }) => {
   const [monthlySalary, setMonthlySalary] = useState(
@@ -11,9 +13,38 @@ const FinancialSlide = ({ onComplete, onPrev, onDataUpdate, data }) => {
   const [monthlySpendingGoal, setMonthlySpendingGoal] = useState(
     data.monthlySpendingGoal?.toString() || ""
   );
-  const [currentBalance, setCurrentBalance] = useState(
-    data.currentBalance?.toString() || ""
-  );
+  const [linkToken, setLinkToken] = useState(null);
+  const [plaidReady, setPlaidReady] = useState(false);
+
+  const onPlaidSuccess = (public_token, metadata) => {
+    //send public_token to backend to exchange for long-term access token
+    //Optionally, call onComplete() here to advance onboarding (not necessary since this is last step)
+  };
+
+  // This hook will be called only after linkToken is set
+  const { open, ready } = usePlaidLink({
+    token: linkToken,
+    onSuccess: onPlaidSuccess,
+    onExit: () => setLinkToken(null), // reset if user closes Plaid Link
+  });
+
+  const handleConnectBank = useCallback(async () => {
+    try {
+      const { data } = await createPlaidLinkToken();
+      setLinkToken(data.link_token);
+      setPlaidReady(true);
+      // open() will be called in the next effect
+    } catch (err) {
+      // handle error
+    }
+  }, []);
+
+  // Open Plaid Link when linkToken is set and ready
+  useEffect(() => {
+    if (linkToken && ready) {
+      open();
+    }
+  }, [linkToken, ready, open]);
 
   const handleComplete = () => {
     const financialData = {
@@ -21,7 +52,7 @@ const FinancialSlide = ({ onComplete, onPrev, onDataUpdate, data }) => {
       monthlySpendingGoal: monthlySpendingGoal
         ? parseFloat(monthlySpendingGoal)
         : null,
-      currentBalance: currentBalance ? parseFloat(currentBalance) : null,
+      currentBalance: null, // Removed current balance as it's now handled by Plaid
     };
 
     onDataUpdate(financialData);
@@ -36,10 +67,8 @@ const FinancialSlide = ({ onComplete, onPrev, onDataUpdate, data }) => {
   const canContinue =
     monthlySalary &&
     monthlySpendingGoal &&
-    currentBalance &&
     isValidNumber(monthlySalary) &&
-    isValidNumber(monthlySpendingGoal) &&
-    isValidNumber(currentBalance);
+    isValidNumber(monthlySpendingGoal);
 
   return (
     <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm animate-fade-in">
@@ -105,31 +134,7 @@ const FinancialSlide = ({ onComplete, onPrev, onDataUpdate, data }) => {
             />
           </div>
 
-          <div className="space-y-2">
-            <Label
-              htmlFor="current-balance"
-              className="text-sm font-medium text-gray-700"
-            >
-              Current Available Balance ($)
-            </Label>
-            <Input
-              id="current-balance"
-              type="number"
-              placeholder="0.00"
-              value={currentBalance}
-              onChange={(e) => {
-                setCurrentBalance(e.target.value);
-                onDataUpdate({
-                  currentBalance: e.target.value
-                    ? parseFloat(e.target.value)
-                    : null,
-                });
-              }}
-              className="h-12 border-gray-200 focus:border-sky-500 focus:ring-sky-500 transition-colors text-lg"
-              min="0"
-              step="0.01"
-            />
-          </div>
+          {/* Removed Current Available Balance field */}
         </div>
 
         <div className="bg-gradient-to-r from-sky-50 to-cyan-50 p-4 rounded-lg border border-sky-100">
@@ -148,11 +153,11 @@ const FinancialSlide = ({ onComplete, onPrev, onDataUpdate, data }) => {
             Back
           </Button>
           <Button
-            onClick={handleComplete}
-            disabled={!canContinue}
+            onClick={handleConnectBank}
+            disabled={!!linkToken} // disable while waiting for Plaid or if already open
             className="flex-1 h-12 bg-gradient-to-r from-sky-500 to-cyan-500 hover:from-sky-600 hover:to-cyan-600 text-white font-medium transition-all duration-200 transform hover:scale-[1.02] disabled:opacity-50 disabled:transform-none"
           >
-            Complete Setup
+            Connect Bank Account
           </Button>
         </div>
       </CardContent>
