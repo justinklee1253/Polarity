@@ -6,7 +6,10 @@ from dotenv import load_dotenv
 from flask_jwt_extended import JWTManager
 from .extensions import blacklist
 
+from flask_socketio import SocketIO
+
 blacklist = set()
+socketio = SocketIO(cors_allowed_origins="*")
 
 def create_app():
     """
@@ -61,6 +64,8 @@ def create_app():
     app.register_blueprint(onboarding_bp)
     app.register_blueprint(chat_bp)
     app.register_blueprint(plaid_bp)
+
+    socketio.init_app(app)
 
     
     # print("Blueprint 'auth_bp' registered successfully")

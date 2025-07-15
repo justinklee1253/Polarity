@@ -1,4 +1,3 @@
-# Enhanced plaid.py with webhook support
 import os
 import plaid
 from plaid.api import plaid_api
@@ -65,13 +64,7 @@ def check_and_complete_onboarding(user_id):
                 user.onboarding_completed = True
                 user.onboarding_step = 6
                 db.commit()
-                
-                # Emit webhook event (if using SocketIO)
-                # socketio.emit('onboarding_complete', {
-                #     'user_id': user_id,
-                #     'message': 'Onboarding completed successfully',
-                #     'timestamp': datetime.utcnow().isoformat()
-                # }, room=str(user_id))
+            
                 
                 current_app.logger.info(f"Onboarding completed for user {user_id}")
                 return True, "Onboarding completed successfully"
@@ -217,24 +210,3 @@ def update_balance():
     except Exception as e:
         current_app.logger.error(f"Plaid update_balance error: {str(e)}")
         return jsonify({"error": "Failed to fetch/update balance"}), 500
-
-# New endpoint to manually trigger onboarding completion check
-@plaid_bp.route('/check_onboarding_completion', methods=['POST'])
-@jwt_required()
-def check_onboarding_completion():
-    """
-    Manual webhook trigger to check if onboarding can be completed.
-    This can be called from the frontend after financial data is submitted.
-    """
-    user_id = get_jwt_identity()
-    
-    try:
-        completion_success, completion_message = check_and_complete_onboarding(user_id)
-        return jsonify({
-            "onboarding_completed": completion_success,
-            "message": completion_message
-        }), 200
-        
-    except Exception as e:
-        current_app.logger.error(f"Error checking onboarding completion: {str(e)}")
-        return jsonify({"error": "Failed to check onboarding completion"}), 500
