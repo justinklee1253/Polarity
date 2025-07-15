@@ -31,3 +31,13 @@ export async function getOnboardingStatus() {
     },
   });
 }
+
+export async function checkOnboardingCompletion() {
+  const token = localStorage.getItem("access_token");
+  return apiService.request("/onboarding/check_completion", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+}

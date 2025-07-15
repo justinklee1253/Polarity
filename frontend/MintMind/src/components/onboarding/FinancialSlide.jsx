@@ -4,21 +4,35 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { usePlaidLink } from "react-plaid-link";
-import { createPlaidLinkToken } from "@/services/plaid";
+import {
+  createPlaidLinkToken,
+  updateUserBalance,
+  exchangePublicToken,
+} from "@/services/plaid";
+import { apiService } from "@/services/api";
 
 const FinancialSlide = ({ onComplete, onPrev, onDataUpdate, data }) => {
-  const [monthlySalary, setMonthlySalary] = useState(
-    data.monthlySalary?.toString() || ""
-  );
-  const [monthlySpendingGoal, setMonthlySpendingGoal] = useState(
-    data.monthlySpendingGoal?.toString() || ""
-  );
+  const [monthlySalary, setMonthlySalary] = useState("");
+  const [monthlySpendingGoal, setMonthlySpendingGoal] = useState("");
   const [linkToken, setLinkToken] = useState(null);
   const [plaidReady, setPlaidReady] = useState(false);
 
-  const onPlaidSuccess = (public_token, metadata) => {
-    //send public_token to backend to exchange for long-term access token
-    //Optionally, call onComplete() here to advance onboarding (not necessary since this is last step)
+  const onPlaidSuccess = async (public_token, metadata) => {
+    try {
+      // Exchange public_token for access_token
+      const { data } = await exchangePublicToken(public_token);
+      const accessToken = data.access_token;
+
+      // Update the user's balance
+      await updateUserBalance(accessToken);
+
+      // Now allow onboarding to complete and redirect to dashboard
+      await onComplete(); // <-- This triggers the redirect
+    } catch (err) {
+      // Show error to user
+      console.error("Plaid onboarding error:", err);
+      // Optionally show a toast or error message
+    }
   };
 
   // This hook will be called only after linkToken is set
@@ -52,7 +66,6 @@ const FinancialSlide = ({ onComplete, onPrev, onDataUpdate, data }) => {
       monthlySpendingGoal: monthlySpendingGoal
         ? parseFloat(monthlySpendingGoal)
         : null,
-      currentBalance: null, // Removed current balance as it's now handled by Plaid
     };
 
     onDataUpdate(financialData);
@@ -154,7 +167,7 @@ const FinancialSlide = ({ onComplete, onPrev, onDataUpdate, data }) => {
           </Button>
           <Button
             onClick={handleConnectBank}
-            disabled={!!linkToken} // disable while waiting for Plaid or if already open
+            disabled={!canContinue || !!linkToken} // Only enabled if both fields are valid and not already connecting
             className="flex-1 h-12 bg-gradient-to-r from-sky-500 to-cyan-500 hover:from-sky-600 hover:to-cyan-600 text-white font-medium transition-all duration-200 transform hover:scale-[1.02] disabled:opacity-50 disabled:transform-none"
           >
             Connect Bank Account

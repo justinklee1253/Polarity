@@ -9,3 +9,27 @@ export async function createPlaidLinkToken() {
     },
   });
 }
+
+export async function updateUserBalance(accessToken) {
+  const token = localStorage.getItem("access_token");
+  return apiService.request("/plaid/update_balance", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ access_token: accessToken }),
+  });
+}
+
+export async function exchangePublicToken(publicToken) {
+  const token = localStorage.getItem("access_token");
+  return apiService.request("/plaid/exchange_public_token", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ public_token: publicToken }),
+  });
+}

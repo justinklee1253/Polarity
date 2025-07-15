@@ -1,5 +1,5 @@
 from .database import Base
-from sqlalchemy import Column, Integer, String, Float, Text, DateTime, ForeignKey, Boolean, Numeric
+from sqlalchemy import Column, Integer, String, Float, Text, DateTime, ForeignKey, Boolean, Numeric, Date
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
@@ -28,7 +28,10 @@ class User(Base):
     is_student = Column(Boolean, nullable=True)
     financial_goals = Column(Text, nullable=True) #json string of goals (have options)
 
+    plaid_access_token = Column(String, nullable=True)
+
     conversations = relationship("Conversations", back_populates="user", cascade="all, delete-orphan") #for each user, access all conversations as a list
+    transactions = relationship("Transaction", back_populates="user", cascade="all, delete-orphan")
 
 class Conversations(Base):
     """
@@ -63,4 +66,26 @@ class Messages(Base):
 
     conversation = relationship("Conversations", back_populates="messages")
     user = relationship("User")
+
+
+#need new transactions table in our app. 
+
+class Transaction(Base):
+    __tablename__ = "transactions"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey("users.id"), index=True, nullable=False)
+    plaid_transaction_id = Column(String, unique=True, nullable=False)
+    date_posted = Column(Date, nullable=False)
+    name = Column(String, nullable=False)
+    amount = Column(Numeric(10, 2), nullable=False)
+    type = Column(String, nullable=False)  # 'expense' or 'income'
+    payment_source = Column(String)  # e.g., 'direct deposit', 'credit card'
+    plaid_category = Column(String)  # Plaid's category
+    user_category = Column(String)   # User-editable category/tag
+    is_recurring = Column(Boolean, default=False)
+    new_balance_after_transaction = Column(Numeric(10, 2))
+    notes = Column(Text)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    user = relationship("User", back_populates="transactions") 
     

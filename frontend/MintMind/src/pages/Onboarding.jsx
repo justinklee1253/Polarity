@@ -9,12 +9,14 @@ import FinancialSlide from "@/components/onboarding/FinancialSlide";
 import { toast } from "@/hooks/use-toast";
 import {
   updateOnboardingStep,
-  completeOnboarding,
   getOnboardingStatus,
+  checkOnboardingCompletion,
 } from "@/services/onboarding";
+import { apiService } from "@/services/api";
 
 const Onboarding = () => {
   const [currentStep, setCurrentStep] = useState(0);
+  const [isCompleting, setIsCompleting] = useState(false);
   const [onboardingData, setOnboardingData] = useState({
     name: "",
     age: null,
@@ -23,7 +25,7 @@ const Onboarding = () => {
     reasons: [],
     monthlySalary: null,
     monthlySpendingGoal: null,
-    currentBalance: null,
+    // currentBalance: null,
   });
   const navigate = useNavigate();
 
@@ -33,7 +35,6 @@ const Onboarding = () => {
       if (data.onboarding_completed) {
         navigate("/dashboard");
       } else if (typeof data.current_step === "number") {
-        4;
         setCurrentStep(data.current_step);
         // Pre-populate onboardingData from backend user_data if available
         if (data.user_data) {
@@ -47,12 +48,39 @@ const Onboarding = () => {
               : [],
             monthlySalary: data.user_data.salary_monthly ?? null,
             monthlySpendingGoal: data.user_data.monthly_spending_goal ?? null,
-            currentBalance: data.user_data.total_balance ?? null,
+            // currentBalance: data.user_data.total_balance ?? null,
           });
         }
       }
     });
   }, [navigate]);
+
+  // Add effect to check onboarding completion status periodically
+  useEffect(() => {
+    let interval;
+    if (currentStep >= 5 && !isCompleting) {
+      interval = setInterval(async () => {
+        try {
+          const { data } = await getOnboardingStatus();
+          if (data.onboarding_completed) {
+            setIsCompleting(true);
+            clearInterval(interval);
+            toast({
+              title: "Welcome to Polarity!",
+              description: "Your account has been set up successfully.",
+            });
+            navigate("/dashboard");
+          }
+        } catch (error) {
+          console.error("Error checking onboarding status:", error);
+        }
+      }, 2000); // Check every 2 seconds
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [currentStep, isCompleting, navigate]);
 
   // Helper to map frontend data to backend expected fields
   const mapDataForBackend = () => {
@@ -66,9 +94,10 @@ const Onboarding = () => {
         : [],
       salary_monthly: onboardingData.monthlySalary,
       monthly_spending_goal: onboardingData.monthlySpendingGoal,
-      total_balance: onboardingData.currentBalance,
+      // total_balance: onboardingData.currentBalance,
     };
   };
+
   const nextStep = async (immediateData = null) => {
     // Save current step to backend before moving to next
     try {
@@ -110,16 +139,10 @@ const Onboarding = () => {
         dataToSend = {
           salary_monthly: onboardingData.monthlySalary,
           monthly_spending_goal: onboardingData.monthlySpendingGoal,
-          total_balance: onboardingData.currentBalance,
+          // total_balance: onboardingData.currentBalance,
         };
       }
       if (backendStep <= 6) {
-        // console.log( DEBUG
-        //   "Sending to backend - Step:",
-        //   backendStep,
-        //   "Data:",
-        //   dataToSend
-        // );
         await updateOnboardingStep(backendStep, dataToSend);
       }
       setCurrentStep((prev) => prev + 1);
@@ -131,34 +154,51 @@ const Onboarding = () => {
       });
     }
   };
+
   const prevStep = () => setCurrentStep((prev) => prev - 1);
 
   const updateData = (newData) => {
     setOnboardingData((prev) => ({ ...prev, ...newData }));
   };
 
-  const completeOnboarding = async () => {
+  const handleOnboardingComplete = async () => {
+    if (isCompleting) return;
+
     try {
-      // Save the last step (step 6)
+      setIsCompleting(true);
+      // Save the final step data
       await updateOnboardingStep(6, {
         salary_monthly: onboardingData.monthlySalary,
         monthly_spending_goal: onboardingData.monthlySpendingGoal,
-        total_balance: onboardingData.currentBalance,
       });
-      // Mark onboarding as complete
-      await completeOnboarding();
-      toast({
-        title: "Welcome to Polarity!",
-        description: "Your account has been set up successfully.",
-      });
-      navigate("/dashboard");
+
+      // Call webhook to check onboarding completion
+      const response = await checkOnboardingCompletion();
+      if (response.data.onboarding_completed) {
+        toast({
+          title: "Welcome to Polarity!",
+          description: "Your account has been set up successfully.",
+        });
+        navigate("/dashboard");
+      } else {
+        // Not complete yet (maybe Plaid not connected), let polling continue
+        setIsCompleting(false);
+      }
     } catch (err) {
+      setIsCompleting(false);
       toast({
         title: "Error",
         description: err.message || "Failed to complete onboarding",
       });
     }
   };
+
+  // Add this effect to handle skipping the reason slide
+  useEffect(() => {
+    if (currentStep === 4 && onboardingData.isCollegeStudent === false) {
+      setCurrentStep(6);
+    }
+  }, [currentStep, onboardingData.isCollegeStudent]);
 
   const renderStep = () => {
     switch (currentStep) {
@@ -197,24 +237,28 @@ const Onboarding = () => {
           />
         );
       case 4:
-        if (onboardingData.isCollegeStudent) {
-          return (
-            <ReasonSlide
-              onNext={nextStep}
-              onPrev={prevStep}
-              onDataUpdate={updateData}
-              data={onboardingData}
-            />
-          );
-        } else {
-          // Skip reason slide if not a college student
-          setCurrentStep(6);
-          return null;
-        }
+        return (
+          <ReasonSlide
+            onNext={nextStep}
+            onPrev={prevStep}
+            onDataUpdate={updateData}
+            data={onboardingData}
+          />
+        );
       case 5:
+      case 6:
+        // Only render FinancialSlide if not completing
+        if (isCompleting) {
+          return (
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-500 mx-auto mb-4"></div>
+              <p className="text-gray-600">Setting up your account...</p>
+            </div>
+          );
+        }
         return (
           <FinancialSlide
-            onComplete={completeOnboarding}
+            onComplete={handleOnboardingComplete}
             onPrev={prevStep}
             onDataUpdate={updateData}
             data={onboardingData}
