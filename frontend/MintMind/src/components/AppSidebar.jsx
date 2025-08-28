@@ -27,7 +27,6 @@ import {
   LayoutDashboard,
   UserRound,
   Rocket,
-  Calendar,
   LogOut,
   PanelRight,
   Shield,
@@ -50,11 +49,6 @@ const menuItems = [
     title: "Ask Spark",
     url: "/spark",
     icon: Rocket,
-  },
-  {
-    title: "Plan Budget",
-    url: "/plan-budget",
-    icon: Calendar,
   },
 ];
 

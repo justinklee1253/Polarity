@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -12,40 +12,52 @@ const EmptyState = ({
   isLoading,
   onSendMessage,
 }) => (
-  <div className="flex-1 flex flex-col items-center justify-center min-h-0 px-4">
-    <div className="text-center max-w-3xl w-full">
-      <div className="w-16 h-16 bg-gradient-to-r from-sky-500 to-cyan-500 rounded-2xl flex items-center justify-center mx-auto mb-6">
-        <Sparkles className="h-8 w-8 text-white" />
-      </div>
-      <h2 className="text-3xl font-bold text-gray-800 mb-3">
+  <div className="flex-1 flex flex-col items-center justify-center min-h-0 px-4 relative">
+    {/* Animated Background Elements */}
+    <div className="absolute inset-0 overflow-hidden">
+      <div className="absolute -top-40 -right-40 w-80 h-80 bg-emerald-500/5 rounded-full blur-3xl animate-pulse"></div>
+      <div
+        className="absolute -bottom-40 -left-40 w-80 h-80 bg-cyan-500/5 rounded-full blur-3xl animate-pulse"
+        style={{ animationDelay: "1s" }}
+      ></div>
+      <div
+        className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-r from-emerald-500/3 to-cyan-500/3 rounded-full blur-3xl animate-pulse"
+        style={{ animationDelay: "2s" }}
+      ></div>
+    </div>
+
+    <div className="text-center max-w-3xl w-full relative z-10">
+      <h2 className="text-4xl font-bold text-white mb-4 bg-gradient-to-r from-emerald-400 via-cyan-400 to-emerald-500 bg-clip-text text-transparent">
         What can I help with?
       </h2>
-      <p className="text-gray-600 mb-8 text-lg">
+      <p className="text-slate-300 mb-10 text-xl leading-relaxed">
         Ask me anything about budgeting, saving, investing, or financial
         planning.
       </p>
 
-      {/* Input bar in center */}
-      <div className="relative mb-8 max-w-2xl mx-auto">
-        <Input
-          placeholder="Ask Spark anything about finance..."
-          value={inputMessage}
-          onChange={(e) => setInputMessage(e.target.value)}
-          onKeyPress={handleKeyPress}
-          className="w-full pr-12 py-6 text-base border-gray-300 focus:border-sky-500 focus:ring-sky-500 bg-white rounded-xl shadow-sm h-14"
-          disabled={isLoading}
-        />
-        <Button
-          onClick={handleSend}
-          disabled={!inputMessage.trim() || isLoading}
-          className="absolute right-3 top-1/2 transform -translate-y-1/2 bg-gradient-to-r from-sky-500 to-cyan-500 hover:from-sky-600 hover:to-cyan-600 w-8 h-8 p-0 rounded-lg"
-        >
-          <Send className="h-4 w-4" />
-        </Button>
+      {/* Input bar in center with glassmorphism */}
+      <div className="relative mb-10 max-w-2xl mx-auto">
+        <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-2 shadow-2xl shadow-black/20">
+          <Input
+            placeholder="Ask Spark anything about finance..."
+            value={inputMessage}
+            onChange={(e) => setInputMessage(e.target.value)}
+            onKeyPress={handleKeyPress}
+            className="w-full pr-12 py-6 text-base bg-transparent border-0 focus:ring-0 text-white placeholder:text-slate-400 h-14 text-lg"
+            disabled={isLoading}
+          />
+          <Button
+            onClick={handleSend}
+            disabled={!inputMessage.trim() || isLoading}
+            className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 w-10 h-10 p-0 rounded-xl hover:scale-110 transition-all duration-200 shadow-lg shadow-emerald-500/25"
+          >
+            <Send className="h-5 w-5" />
+          </Button>
+        </div>
       </div>
 
-      {/* Recommendations below input */}
-      <div className="grid grid-cols-2 gap-2">
+      {/* Recommendations with glassmorphism cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {[
           "Help me create a monthly budget",
           "What's the best way to save for college?",
@@ -54,10 +66,10 @@ const EmptyState = ({
         ].map((suggestion, index) => (
           <Button
             key={index}
-            variant="outline"
-            size="sm"
-            className="text-left justify-start border-gray-200 hover:border-sky-300 hover:bg-sky-50 text-sm py-2 px-3 h-auto whitespace-normal"
+            variant="ghost"
+            className="text-left justify-start backdrop-blur-xl bg-white/5 border border-white/10 hover:bg-white/10 text-slate-300 hover:text-white text-sm py-4 px-4 h-auto whitespace-normal rounded-xl transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-emerald-500/10"
             onClick={() => onSendMessage(suggestion)}
+            style={{ animationDelay: `${index * 100}ms` }}
           >
             {suggestion}
           </Button>
@@ -74,6 +86,15 @@ const ChatInterface = ({
   isNewConversation,
 }) => {
   const [inputMessage, setInputMessage] = useState("");
+  const messagesEndRef = useRef(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   const handleSend = () => {
     if (!inputMessage.trim() || isLoading) return;
@@ -89,7 +110,20 @@ const ChatInterface = ({
   };
 
   return (
-    <div className="flex flex-col h-full w-full">
+    <div className="flex flex-col h-full w-full bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-900 relative overflow-hidden">
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 right-20 w-64 h-64 bg-emerald-500/3 rounded-full blur-3xl animate-pulse"></div>
+        <div
+          className="absolute bottom-20 left-20 w-64 h-64 bg-cyan-500/3 rounded-full blur-3xl animate-pulse"
+          style={{ animationDelay: "1.5s" }}
+        ></div>
+        <div
+          className="absolute top-1/3 left-1/3 w-48 h-48 bg-emerald-500/2 rounded-full blur-2xl animate-pulse"
+          style={{ animationDelay: "3s" }}
+        ></div>
+      </div>
+
       {isNewConversation && messages.length === 0 ? (
         <EmptyState
           inputMessage={inputMessage}
@@ -100,86 +134,99 @@ const ChatInterface = ({
           onSendMessage={onSendMessage}
         />
       ) : (
-        <>
-          <div className="flex-1 min-h-0 overflow-y-auto">
-            <ScrollArea className="h-full p-6">
-              <div className="max-w-3xl mx-auto space-y-6">
-                {messages.map((message) => (
-                  <div
-                    key={message.id}
-                    className={`flex gap-4 ${
-                      message.isBot ? "justify-start" : "justify-end"
-                    }`}
-                  >
-                    {message.isBot && (
-                      <div className="w-8 h-8 bg-gradient-to-r from-sky-500 to-cyan-500 rounded-full flex items-center justify-center flex-shrink-0">
-                        <Bot className="h-4 w-4 text-white" />
-                      </div>
-                    )}
+        <div className="flex flex-col h-full relative z-10">
+          {/* Combined Chat Container */}
+          <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl m-4 shadow-2xl shadow-black/20 overflow-hidden flex flex-col h-full">
+            {/* Messages Area */}
+            <div className="flex-1 min-h-0 overflow-y-auto">
+              <ScrollArea className="h-full p-6">
+                <div className="max-w-3xl mx-auto space-y-6">
+                  {messages.map((message, index) => (
                     <div
-                      className={`max-w-[70%] p-4 rounded-2xl ${
-                        message.isBot
-                          ? "bg-white border border-gray-200 text-gray-800"
-                          : "bg-gradient-to-r from-sky-500 to-cyan-500 text-white ml-auto"
+                      key={message.id}
+                      className={`flex gap-4 transition-all duration-500 ease-out ${
+                        message.isBot ? "justify-start" : "justify-end"
                       }`}
+                      style={{
+                        opacity: 0,
+                        transform: "translateY(20px)",
+                        animation: `slideIn 0.5s ease-out ${
+                          index * 0.1
+                        }s forwards`,
+                      }}
                     >
-                      <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                        {message.text}
-                      </p>
-                    </div>
-                    {!message.isBot && (
-                      <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
-                        <User className="h-4 w-4 text-gray-600" />
+                      {message.isBot && (
+                        <div className="w-10 h-10 bg-gradient-to-r from-emerald-500 to-cyan-500 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-emerald-500/25">
+                          <Bot className="h-5 w-5 text-white" />
+                        </div>
+                      )}
+                      <div
+                        className={`max-w-[70%] p-5 rounded-2xl transition-all duration-300 hover:scale-[1.02] ${
+                          message.isBot
+                            ? "backdrop-blur-xl bg-white/10 border border-white/10 text-white shadow-lg shadow-black/10"
+                            : "bg-gradient-to-r from-emerald-500 to-cyan-500 text-white ml-auto shadow-lg shadow-emerald-500/25"
+                        }`}
+                      >
+                        <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                          {message.text}
+                        </p>
                       </div>
-                    )}
-                  </div>
-                ))}
-                {isLoading && (
-                  <div className="flex gap-4 justify-start">
-                    <div className="w-8 h-8 bg-gradient-to-r from-sky-500 to-cyan-500 rounded-full flex items-center justify-center">
-                      <Bot className="h-4 w-4 text-white" />
+                      {!message.isBot && (
+                        <div className="w-10 h-10 backdrop-blur-xl bg-white/10 border border-white/10 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-black/10">
+                          <User className="h-5 w-5 text-slate-300" />
+                        </div>
+                      )}
                     </div>
-                    <div className="bg-white border border-gray-200 p-4 rounded-2xl">
-                      <div className="flex space-x-1">
-                        <div className="w-2 h-2 bg-sky-500 rounded-full animate-bounce"></div>
-                        <div
-                          className="w-2 h-2 bg-sky-500 rounded-full animate-bounce"
-                          style={{ animationDelay: "0.1s" }}
-                        ></div>
-                        <div
-                          className="w-2 h-2 bg-sky-500 rounded-full animate-bounce"
-                          style={{ animationDelay: "0.2s" }}
-                        ></div>
+                  ))}
+                  {isLoading && (
+                    <div className="flex gap-4 justify-start">
+                      <div className="w-10 h-10 bg-gradient-to-r from-emerald-500 to-cyan-500 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/25">
+                        <Bot className="h-5 w-5 text-white" />
+                      </div>
+                      <div className="backdrop-blur-xl bg-white/10 border border-white/10 p-5 rounded-2xl shadow-lg shadow-black/10">
+                        <div className="flex space-x-2">
+                          <div className="w-2 h-2 bg-emerald-400 rounded-full animate-bounce"></div>
+                          <div
+                            className="w-2 h-2 bg-emerald-400 rounded-full animate-bounce"
+                            style={{ animationDelay: "0.1s" }}
+                          ></div>
+                          <div
+                            className="w-2 h-2 bg-emerald-400 rounded-full animate-bounce"
+                            style={{ animationDelay: "0.2s" }}
+                          ></div>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                )}
-              </div>
-            </ScrollArea>
-          </div>
+                  )}
+                  <div ref={messagesEndRef} />
+                </div>
+              </ScrollArea>
+            </div>
 
-          <div className="flex-shrink-0 border-t border-gray-200 bg-white/95 backdrop-blur-sm">
-            <div className="max-w-3xl mx-auto p-6">
-              <div className="relative">
-                <Input
-                  placeholder="Ask Spark anything about finance..."
-                  value={inputMessage}
-                  onChange={(e) => setInputMessage(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  className="w-full pr-12 py-6 text-base border-gray-300 focus:border-sky-500 focus:ring-sky-500 bg-white rounded-xl shadow-sm h-14"
-                  disabled={isLoading}
-                />
-                <Button
-                  onClick={handleSend}
-                  disabled={!inputMessage.trim() || isLoading}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 bg-gradient-to-r from-sky-500 to-cyan-500 hover:from-sky-600 hover:to-cyan-600 w-8 h-8 p-0 rounded-lg"
-                >
-                  <Send className="h-4 w-4" />
-                </Button>
+            {/* Input Area - Connected to Messages */}
+            <div className="border-t border-white/10 bg-white/5">
+              <div className="max-w-3xl mx-auto p-6">
+                <div className="relative">
+                  <Input
+                    placeholder="Ask Spark anything about finance..."
+                    value={inputMessage}
+                    onChange={(e) => setInputMessage(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    className="w-full pr-14 py-6 text-base bg-white/5 border border-white/10 focus:border-emerald-500/50 focus:ring-emerald-500/25 text-white placeholder:text-slate-400 rounded-xl h-14 backdrop-blur-xl transition-all duration-300"
+                    disabled={isLoading}
+                  />
+                  <Button
+                    onClick={handleSend}
+                    disabled={!inputMessage.trim() || isLoading}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 w-10 h-10 p-0 rounded-xl hover:scale-110 transition-all duration-200 shadow-lg shadow-emerald-500/25 disabled:opacity-50 disabled:hover:scale-100"
+                  >
+                    <Send className="h-5 w-5" />
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
-        </>
+        </div>
       )}
     </div>
   );

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import WelcomeModal from "@/components/WelcomeModal";
 import ConversationSidebar from "@/components/ConversationSidebar";
 import ChatInterface from "@/components/ChatInterface";
+import { useSidebar } from "@/components/ui/sidebar";
 import {
   create_conversation,
   get_conversations,
@@ -19,6 +20,10 @@ const Spark = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [messages, setMessages] = useState([]);
+
+  // Get main sidebar state
+  const { state: mainSidebarState } = useSidebar();
+  const isMainSidebarCollapsed = mainSidebarState === "collapsed";
 
   // Function to fetch and update conversations
   const fetchConversations = async () => {
@@ -116,7 +121,26 @@ const Spark = () => {
   };
 
   const handleSendMessage = async (messageText) => {
-    if (!activeConversationId || !messageText.trim()) return;
+    if (!messageText.trim()) return;
+
+    let conversationId = activeConversationId;
+
+    // If no active conversation, create one first
+    if (!conversationId) {
+      try {
+        // Create new conversation
+        const { data } = await create_conversation();
+        conversationId = data.id;
+
+        // Update state with new conversation
+        await fetchConversations();
+        setActiveConversationId(conversationId);
+        setMessages([]); // Clear messages for new conversation
+      } catch (error) {
+        setErrorMessage("Failed to create new conversation.");
+        return;
+      }
+    }
 
     // Optimistically add the user's message to the UI
     const userMessage = {
@@ -129,11 +153,11 @@ const Spark = () => {
     setIsLoading(true);
 
     try {
-      await send_user_message(activeConversationId, messageText);
+      await send_user_message(conversationId, messageText);
 
       // After sending, fetch both the updated message list and refresh conversations
       const [messagesResponse] = await Promise.all([
-        get_conversation_messages(activeConversationId),
+        get_conversation_messages(conversationId),
         fetchConversations(),
       ]);
 
@@ -157,7 +181,7 @@ const Spark = () => {
   const isNewConversation = !activeConversation || messages.length === 0;
 
   return (
-    <div className="h-screen min-h-0 flex bg-gray-50 overflow-hidden p-0 m-0">
+    <div className="h-screen min-h-0 flex overflow-hidden p-0 m-0 bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-900 fixed inset-0">
       <WelcomeModal
         isOpen={showWelcomeModal}
         onClose={() => setShowWelcomeModal(false)}
@@ -172,9 +196,21 @@ const Spark = () => {
         onDeleteConversation={handleDeleteConversation}
         isCollapsed={sidebarCollapsed}
         onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+        appSidebarCollapsed={isMainSidebarCollapsed}
       />
 
-      <div className="flex-1 h-full min-h-0 flex flex-col">
+      <div
+        className="flex-1 h-full min-h-0 flex flex-col transition-all duration-300"
+        style={{
+          marginLeft: `${
+            sidebarCollapsed
+              ? isMainSidebarCollapsed
+                ? 64
+                : 256
+              : (isMainSidebarCollapsed ? 64 : 256) + 320
+          }px`,
+        }}
+      >
         <ChatInterface
           messages={messages}
           onSendMessage={handleSendMessage}

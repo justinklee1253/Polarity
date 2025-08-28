@@ -26,3 +26,34 @@
   background: rgba(15, 23, 42, 0.9) !important;
   backdrop-filter: blur(12px) !important;
 }
+
+/* Chat message animations */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Smooth scrolling for better UX */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+/* Ensure body has dark background to prevent white seams */
+body {
+  background: linear-gradient(
+    to bottom right,
+    #0f172a,
+    #1e293b,
+    #064e3b
+  ) !important;
+  margin: 0;
+  padding: 0;
+}
