@@ -1,3 +1,28 @@
 @import "tailwindcss";
 @tailwind components;
 @tailwind utilities;
+
+/* Fix sidebar white flash animation */
+[data-sidebar="sidebar"] {
+  background: rgba(15, 23, 42, 0.9) !important;
+  backdrop-filter: blur(12px) !important;
+  transition: all 300ms ease-out !important;
+}
+
+[data-sidebar="sidebar"] * {
+  transition: all 300ms ease-out !important;
+}
+
+/* Ensure sidebar content maintains dark background during animation */
+.sidebar-content {
+  background: transparent !important;
+}
+
+/* Override any white backgrounds in sidebar animations */
+[data-state="open"] [data-sidebar="sidebar"],
+[data-state="closed"] [data-sidebar="sidebar"],
+[data-state="opening"] [data-sidebar="sidebar"],
+[data-state="closing"] [data-sidebar="sidebar"] {
+  background: rgba(15, 23, 42, 0.9) !important;
+  backdrop-filter: blur(12px) !important;
+}
