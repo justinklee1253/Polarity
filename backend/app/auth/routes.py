@@ -114,6 +114,11 @@ def signup():
 
 @auth_bp.route('/login', methods=['POST'])
 def login():
+    """
+    Login Endpoint:
+    - Define request data from client
+    
+    """
     try: 
         with get_db_session() as db:
             request_data = request.get_json()
@@ -139,7 +144,7 @@ def login():
 
             #upon logging in: generate JWT token
             if verified_user and bcrypt.checkpw(request_data.get('password').encode('utf-8'), verified_user.password.encode('utf-8')):
-                jwt_access_token = create_access_token(identity=str(verified_user.id))
+                jwt_access_token = create_access_token(identity=str(verified_user.id)) 
                 refresh_token = create_refresh_token(identity=str(verified_user.id)) #allows client to obtain new access tokens without user re-auth
                 resp = make_response(jsonify({"access_token": jwt_access_token, 
                                               "message": "Login successful",
@@ -150,7 +155,7 @@ def login():
                 resp.set_cookie(
                     "refresh_token",
                     refresh_token,
-                    httponly=True,
+                    httponly=True, #can't be accessed by JS
                     secure=False, #only over HTTP, False for local dev
                     samesite='Lax' #lax for dev, strict for prod
                 )

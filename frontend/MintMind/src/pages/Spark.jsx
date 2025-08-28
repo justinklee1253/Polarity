@@ -23,7 +23,7 @@ const Spark = () => {
   // Function to fetch and update conversations
   const fetchConversations = async () => {
     try {
-      const { data } = await get_conversations();
+      const { data } = await get_conversations(); //We abstract away logic for fetching conversations in service layer
       const sorted = [...data].sort(
         (a, b) => new Date(b.last_modified) - new Date(a.last_modified)
       );

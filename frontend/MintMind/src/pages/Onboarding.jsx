@@ -27,11 +27,12 @@ const Onboarding = () => {
     monthlySpendingGoal: null,
     // currentBalance: null,
   });
-  const navigate = useNavigate();
+  const navigate = useNavigate(); //react router hook to navigate to different pages.
 
   // On mount, fetch onboarding status and set step and data
   useEffect(() => {
     getOnboardingStatus().then(({ data }) => {
+      //destructure data from response from /onboarding/status route.
       if (data.onboarding_completed) {
         navigate("/dashboard");
       } else if (typeof data.current_step === "number") {

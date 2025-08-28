@@ -10,16 +10,20 @@ export async function signup(userData) {
 export async function login(credentials) {
   try {
     const { data, response } = await apiService.request("/auth/login", {
+      //use await to wait for promise to resolve before continuing.
       method: "POST",
       body: JSON.stringify(credentials),
     });
     if (data.access_token) {
+      //if access token is returned, set it in local storage.
       localStorage.setItem("access_token", data.access_token);
     }
     if (!data.onboarding_completed) {
+      //if onboarding is not completed, set the onboarding step in local storage and redirect to onboarding page.
       localStorage.setItem("onboarding_step", data.onboarding_step || "0");
       window.location.href = "/onboarding";
     } else {
+      //if onboarding is completed, redirect to dashboard page.
       window.location.href = "/dashboard";
     }
     return { data, response };

@@ -10,15 +10,12 @@ from sqlalchemy.orm import sessionmaker
 load_dotenv()
 
 SQLALCHEMY_DATABASE_URL = os.getenv('DATABASE_URL')
-
-print(f"Database URL: {SQLALCHEMY_DATABASE_URL}") #DEBUG LINE
-
+# print(f"Database URL: {SQLALCHEMY_DATABASE_URL}") #DEBUG LINE
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine) #allows the Session factory to be used by multiple functions
 
 Base = declarative_base() #set up blueprint for building --> every model needs to extend from it so SQLAlchemy knows how to wire up walls
 #Base holds metadata needed for SQLAlchemy to map python classes to actual sql tables
-
 
 def test_db_connection(): #testing connection via sqlalchemy
     try:
