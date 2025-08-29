@@ -16,21 +16,32 @@ const FinancialSlide = ({ onComplete, onPrev, onDataUpdate, data }) => {
   const [monthlySpendingGoal, setMonthlySpendingGoal] = useState("");
   const [linkToken, setLinkToken] = useState(null);
   const [plaidReady, setPlaidReady] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
 
   const onPlaidSuccess = async (public_token, metadata) => {
     try {
-      // Exchange public_token for access_token
+      setIsConnecting(true);
+      // Exchange public_token for access_token (this also fetches and stores balance)
       const { data } = await exchangePublicToken(public_token);
-      const accessToken = data.access_token;
+      console.log("Bank connected successfully. Balance:", data.total_balance);
 
-      // Update the user's balance
-      await updateUserBalance(accessToken);
-
-      // Now allow onboarding to complete and redirect to dashboard
-      await onComplete(); // <-- This triggers the redirect
+      // Check if onboarding was completed by the backend
+      if (data.onboarding_completed) {
+        // Backend confirmed onboarding is complete - redirect immediately
+        console.log("Onboarding completed immediately via Plaid connection");
+        await onComplete(true); // Pass flag to indicate immediate completion
+      } else {
+        // Backend says onboarding not complete yet - let polling handle it
+        console.log(
+          "Plaid connected but onboarding not complete:",
+          data.message
+        );
+        await onComplete(); // Trigger normal completion flow with polling
+      }
     } catch (err) {
       // Show error to user
       console.error("Plaid onboarding error:", err);
+      setIsConnecting(false);
       // Optionally show a toast or error message
     }
   };
@@ -38,13 +49,14 @@ const FinancialSlide = ({ onComplete, onPrev, onDataUpdate, data }) => {
   // This hook will be called only after linkToken is set
   const { open, ready } = usePlaidLink({
     token: linkToken,
-    onSuccess: onPlaidSuccess,
+    onSuccess: onPlaidSuccess, //callback function plaid link calls when user successfully completes bank connection.
     onExit: () => setLinkToken(null), // reset if user closes Plaid Link
   });
 
   const handleConnectBank = useCallback(async () => {
+    //memoizes function to prevent re-rendering. Function only created once when component mounts
     try {
-      const { data } = await createPlaidLinkToken();
+      const { data } = await createPlaidLinkToken(); //calls service function from plaid.js to make request for link token
       setLinkToken(data.link_token);
       setPlaidReady(true);
       // open() will be called in the next effect
@@ -56,7 +68,7 @@ const FinancialSlide = ({ onComplete, onPrev, onDataUpdate, data }) => {
   // Open Plaid Link when linkToken is set and ready
   useEffect(() => {
     if (linkToken && ready) {
-      open();
+      open(); //opens Plaid Link modal popup window where users actually connect their bank account.
     }
   }, [linkToken, ready, open]);
 
@@ -167,10 +179,17 @@ const FinancialSlide = ({ onComplete, onPrev, onDataUpdate, data }) => {
           </Button>
           <Button
             onClick={handleConnectBank}
-            disabled={!canContinue || !!linkToken} // Only enabled if both fields are valid and not already connecting
+            disabled={!canContinue || !!linkToken || isConnecting} // Only enabled if both fields are valid and not already connecting
             className="flex-1 h-12 bg-gradient-to-r from-sky-500 to-cyan-500 hover:from-sky-600 hover:to-cyan-600 text-white font-medium transition-all duration-200 transform hover:scale-[1.02] disabled:opacity-50 disabled:transform-none"
           >
-            Connect Bank Account
+            {isConnecting ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                Connecting...
+              </>
+            ) : (
+              "Connect Bank Account"
+            )}
           </Button>
         </div>
       </CardContent>

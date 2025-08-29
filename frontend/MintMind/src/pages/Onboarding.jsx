@@ -25,7 +25,7 @@ const Onboarding = () => {
     reasons: [],
     monthlySalary: null,
     monthlySpendingGoal: null,
-    // currentBalance: null,
+    // currentBalance: null handled by plaid
   });
   const navigate = useNavigate(); //react router hook to navigate to different pages.
 
@@ -75,7 +75,7 @@ const Onboarding = () => {
         } catch (error) {
           console.error("Error checking onboarding status:", error);
         }
-      }, 2000); // Check every 2 seconds
+      }, 5000); // Check every 5 seconds (less aggressive since most cases use immediate completion)
     }
 
     return () => {
@@ -162,11 +162,22 @@ const Onboarding = () => {
     setOnboardingData((prev) => ({ ...prev, ...newData }));
   };
 
-  const handleOnboardingComplete = async () => {
+  const handleOnboardingComplete = async (immediateComplete = false) => {
     if (isCompleting) return;
 
     try {
       setIsCompleting(true);
+
+      // If immediate completion (from Plaid), skip saving step data and checking
+      if (immediateComplete) {
+        toast({
+          title: "Welcome to Polarity!",
+          description: "Your account has been set up successfully.",
+        });
+        navigate("/dashboard");
+        return;
+      }
+
       // Save the final step data
       await updateOnboardingStep(6, {
         salary_monthly: onboardingData.monthlySalary,

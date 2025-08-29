@@ -21,15 +21,16 @@ plaid_bp = Blueprint('plaid', __name__, url_prefix='/plaid')
 # Initialize SocketIO (assuming you have it set up in your main app)
 # socketio = SocketIO(cors_allowed_origins="*")
 
+#Set up Plaid API client
 configuration = plaid.Configuration(
-    host=plaid.Environment.Sandbox,
+    host=plaid.Environment.Sandbox, #set to sandbox testing env for dev, real app uses plaid.Environment.Production
     api_key={
-        'clientId': os.getenv('PLAID_CLIENT_ID'), 
+        'clientId': os.getenv('PLAID_CLIENT_ID'), #client id and secret pulled from .env file
         'secret': os.getenv('PLAID_SECRET'),
     }
 )
-api_client = plaid.ApiClient(configuration)
-client = plaid_api.PlaidApi(api_client)
+api_client = plaid.ApiClient(configuration) #handle HTTP requests and responses
+client = plaid_api.PlaidApi(api_client) #Call methods on our client.
 
 def check_and_complete_onboarding(user_id):
     """
@@ -89,8 +90,8 @@ def check_and_complete_onboarding(user_id):
 @plaid_bp.route('/create_link_token', methods=['POST'])
 @jwt_required()
 def create_link_token():
-    user_id = get_jwt_identity()
-    request_obj = LinkTokenCreateRequest(
+    user_id = get_jwt_identity() #get user id from jwt token from frontend
+    request_obj = LinkTokenCreateRequest( #make request to plaid api to create link token
         products=[Products('transactions')],
         client_name="Polarity",
         country_codes=[CountryCode('US')],
@@ -100,6 +101,20 @@ def create_link_token():
         )
     )
     response = client.link_token_create(request_obj)
+
+    # # Debug: Print the response to console
+    # print("=== PLAID LINK TOKEN RESPONSE ===")
+    # print(f"Type: {type(response)}")
+    # print(f"Response object: {response}")
+    # print(f"Response dict: {response.to_dict()}")
+    # print(f"Link token (first 20 chars): {response.to_dict().get('link_token', 'N/A')[:20]}...")
+    # print(f"Expiration: {response.to_dict().get('expiration', 'N/A')}")
+    # print(f"Request ID: {response.to_dict().get('request_id', 'N/A')}")
+    # print("================================")
+    
+    # Also log it properly
+    current_app.logger.info(f"Plaid link token response: {response.to_dict()}")
+    
     return jsonify(response.to_dict())
 
 @plaid_bp.route('/exchange_public_token', methods=['POST'])

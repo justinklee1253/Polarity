@@ -57,3 +57,23 @@ body {
   margin: 0;
   padding: 0;
 }
+
+/* Hide scroll bars in modals to prevent unwanted appearance on hover */
+[data-slot="dialog-content"] {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer and Edge */
+}
+
+[data-slot="dialog-content"]::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+/* Ensure modal content can still scroll but without visible scroll bars */
+[data-slot="dialog-content"] .overflow-y-auto {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+[data-slot="dialog-content"] .overflow-y-auto::-webkit-scrollbar {
+  display: none;
+}
