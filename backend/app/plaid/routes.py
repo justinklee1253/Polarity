@@ -7,14 +7,20 @@ from plaid.model.products import Products
 from plaid.model.country_code import CountryCode
 from plaid.model.accounts_balance_get_request import AccountsBalanceGetRequest
 from plaid.model.item_public_token_exchange_request import ItemPublicTokenExchangeRequest
+from plaid.model.transactions_get_request import TransactionsGetRequest
+from plaid.model.webhook_verification_key_get_request import WebhookVerificationKeyGetRequest
+# Note: For transactions days_requested, we'll pass it as a dict in the request
 
 from flask import Blueprint, request, jsonify, current_app
 from flask_jwt_extended import get_jwt, jwt_required, get_jwt_identity
 from flask_socketio import SocketIO, emit
 
 from ..database import get_db_session
-from ..models import User
+from ..models import User, Transaction
 import json
+from datetime import datetime, date
+import hashlib
+import hmac
 
 plaid_bp = Blueprint('plaid', __name__, url_prefix='/plaid')
 
@@ -86,16 +92,56 @@ def check_and_complete_onboarding(user_id):
     except Exception as e:
         current_app.logger.error(f"Error checking onboarding completion: {str(e)}")
         return False, str(e)
+    
+def verify_plaid_webhook_signature(raw_body, headers):
+    """
+    Verify that the webhook came from Plaid using signature verification
+    """
+    try:
+        # Get the signature from headers
+        plaid_signature = headers.get('Plaid-Webhook-Signature')
+        if not plaid_signature:
+            return False
+        
+        # Get verification key from Plaid (you'd cache this in production)
+        verification_request = WebhookVerificationKeyGetRequest(
+            key_id=headers.get('Plaid-Webhook-Key-Id')
+        )
+        verification_response = client.webhook_verification_key_get(verification_request)
+        
+        # Verify the signature using the key
+        verification_key = verification_response['key']
+        
+        # Create expected signature
+        expected_signature = hmac.new(
+            verification_key.encode('utf-8'),
+            raw_body,
+            hashlib.sha256
+        ).hexdigest()
+        
+        return hmac.compare_digest(plaid_signature, expected_signature)
+        
+    except Exception as e:
+        current_app.logger.error(f"Signature verification error: {str(e)}")
+        return False
 
 @plaid_bp.route('/create_link_token', methods=['POST'])
 @jwt_required()
 def create_link_token():
     user_id = get_jwt_identity() #get user id from jwt token from frontend
+    
+    # Define webhook URL (adjust this to your deployed backend URL in production)
+    webhook_url = current_app.config.get('PLAID_WEBHOOK_URL', 'http://localhost:5001/plaid/webhook')
+    
     request_obj = LinkTokenCreateRequest( #make request to plaid api to create link token
         products=[Products('transactions')],
-        client_name="Polarity",
+        client_name="Polarity", 
         country_codes=[CountryCode('US')],
         language='en',
+        webhook=webhook_url,  # Add webhook endpoint to tell plaid where to send notifications
+        transactions={
+            'days_requested': 90  # Request 90 days of transaction history (default, can be up to 730)
+        },
         user=LinkTokenCreateRequestUser(
             client_user_id=user_id
         )
@@ -132,14 +178,16 @@ def exchange_public_token():
         exchange_request = ItemPublicTokenExchangeRequest(public_token=public_token)
         exchange_response = client.item_public_token_exchange(exchange_request)
         access_token = exchange_response['access_token']
+        item_id = exchange_response['item_id']  # Capture the item_id, unique identifier for the user's Plaid account
 
-        # Store access_token and fetch initial balance
+        # Store access_token and item_id
         with get_db_session() as db:
             user = db.query(User).get(user_id)
             if not user:
                 return jsonify({"error": "User not found"}), 404
             
             user.plaid_access_token = access_token
+            user.plaid_item_id = item_id  # Store item_id for webhook matching
             
             # Fetch and update balance immediately
             try:
@@ -158,14 +206,20 @@ def exchange_public_token():
                 user.total_balance = total_balance
                 db.commit()
                 
+                # INITIAL TRANSACTION SYNC: Fetch transactions immediately after connecting
+                current_app.logger.info(f"Starting initial transaction sync for user {user_id}")
+                sync_user_transactions(user_id, access_token) #This will trigger the webhook for transactions
+                
                 # WEBHOOK TRIGGER: Check if onboarding can be completed
                 completion_success, completion_message = check_and_complete_onboarding(user_id)
                 
                 return jsonify({
                     "access_token": access_token,
+                    "item_id": item_id,
                     "total_balance": total_balance,
                     "onboarding_completed": completion_success,
-                    "message": completion_message
+                    "message": completion_message,
+                    "transactions_synced": True
                 }), 200
                 
             except Exception as balance_error:
@@ -225,3 +279,137 @@ def update_balance():
     except Exception as e:
         current_app.logger.error(f"Plaid update_balance error: {str(e)}")
         return jsonify({"error": "Failed to fetch/update balance"}), 500
+    
+def sync_user_transactions(user_id, access_token):
+    """
+    Fetch and store transactions from Plaid
+    """
+    try:
+        from datetime import datetime, timedelta
+        
+        # Get transactions from last 90 days
+        start_date = (datetime.now() - timedelta(days=90)).date()
+        end_date = datetime.now().date()
+        
+        request_obj = TransactionsGetRequest( #Build request to get transactions from Plaid API 
+            access_token=access_token,
+            start_date=start_date,
+            end_date=end_date
+        )
+        
+        response = client.transactions_get(request_obj) #use client to call Plaid API in right format
+        transactions = response['transactions'] 
+        total_transactions = response['total_transactions']
+        
+        current_app.logger.info(f"Fetched {len(transactions)} of {total_transactions} transactions for user {user_id}")
+        
+        new_transactions = 0
+        updated_transactions = 0
+        
+        with get_db_session() as db:
+            for plaid_transaction in transactions: #**BUG** Batching or Celery to reduce load times. Syncing 1000+ transactions at once.
+                # Check if transaction already exists
+                existing = db.query(Transaction).filter_by(
+                    plaid_transaction_id=plaid_transaction['transaction_id']
+                ).first()
+                
+                if not existing:
+                    # Create new transaction
+                    transaction = Transaction(
+                        user_id=user_id,
+                        plaid_transaction_id=plaid_transaction['transaction_id'],
+                        date_posted=datetime.strptime(plaid_transaction['date'], '%Y-%m-%d').date(),
+                        name=plaid_transaction['name'],
+                        amount=abs(float(plaid_transaction['amount'])),
+                        type='expense' if plaid_transaction['amount'] > 0 else 'income',
+                        payment_source=plaid_transaction.get('account_id'),
+                        plaid_category=', '.join(plaid_transaction.get('category', [])),
+                        # Set initial user_category to first plaid category
+                        user_category=plaid_transaction.get('category', ['Other'])[0] if plaid_transaction.get('category') else 'Other'
+                    )
+                    db.add(transaction)
+                    new_transactions += 1
+                else:
+                    # Update existing transaction if needed
+                    existing.name = plaid_transaction['name']
+                    existing.amount = abs(float(plaid_transaction['amount']))
+                    existing.plaid_category = ', '.join(plaid_transaction.get('category', []))
+                    updated_transactions += 1
+            
+            db.commit()
+            current_app.logger.info(f"Transaction sync completed for user {user_id}: {new_transactions} new, {updated_transactions} updated")
+            
+    except Exception as e:
+        current_app.logger.error(f"Transaction sync error for user {user_id}: {str(e)}")
+        # Don't re-raise the exception to prevent breaking the main flow
+    
+def handle_transactions_webhook(webhook_data):
+    """
+    Handle transaction-related webhooks
+    """
+    webhook_code = webhook_data.get('webhook_code')
+    item_id = webhook_data.get('item_id')
+    
+    # Find user by item_id (you'd need to store item_id when user connects)
+    with get_db_session() as db:
+        user = db.query(User).filter_by(plaid_item_id=item_id).first()
+        if not user:
+            current_app.logger.error(f"No user found for item_id: {item_id}")
+            return
+    
+    if webhook_code in ['INITIAL_UPDATE', 'HISTORICAL_UPDATE', 'DEFAULT_UPDATE']:
+        # Sync transactions for this user
+        sync_user_transactions(user.id, user.plaid_access_token)
+    # elif webhook_code == 'TRANSACTIONS_REMOVED':
+    #     # Handle removed transactions
+    #     removed_transactions = webhook_data.get('removed_transactions', [])
+    #     remove_transactions_from_db(user.id, removed_transactions)
+    else:
+        current_app.logger.info(f"Unhandled transaction webhook code: {webhook_code}")
+
+@plaid_bp.route('/webhook', methods=['POST']) #Plaid will send notifications to this endpoint 
+def plaid_webhook_data():
+    try: 
+
+        raw_data = request.get_data()
+
+        if not verify_plaid_webhook_signature(raw_data, request.headers):
+            current_app.logger.warning("Invalid webhook signature")
+            return jsonify({"error": "Invalid signature"}), 401
+
+        #Parse JSON data from webhook
+        data = request.get_json()
+        webhook_type = data.get('webhook_type')
+        webhook_code = data.get('webhook_code')
+        item_id = data.get('item_id')
+
+        current_app.logger.info(f"Received webhook: {webhook_type} - {webhook_code} for item {item_id}")
+
+        # Handle different webhook types
+        if webhook_type == 'TRANSACTIONS': #Accounts for real-time balance updates w/o refresh. ITEM for Handle when users need to re-auth
+            handle_transactions_webhook(data)
+        else:
+            current_app.logger.info(f"Ignoring webhook type: {webhook_type}")
+        
+        return jsonify({"status": "success"}), 200
+    except Exception as e: 
+        current_app.logger.error(f"Webhook error: {str(e)}")
+        # Still return 200 to prevent Plaid retries for application errors
+        return jsonify({"status": "error", "message": str(e)}), 200
+
+    
+
+            
+
+
+    # webhook_item_id = data.get('item_id')
+    # webhook_updated_at = data.get('updated_at')
+    # webhook_new_transactions = data.get('new_transactions')
+    # webhook_removed_transactions = data.get('removed_transactions')
+    # webhook_account_ids = data.get('account_ids')
+
+
+
+    
+
+

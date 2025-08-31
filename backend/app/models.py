@@ -29,6 +29,7 @@ class User(Base):
     financial_goals = Column(Text, nullable=True) #json string of goals (have options)
 
     plaid_access_token = Column(String, nullable=True)
+    plaid_item_id = Column(String, nullable=True)  # Store Plaid item ID for webhook matching
 
     conversations = relationship("Conversations", back_populates="user", cascade="all, delete-orphan") #for each user, access all conversations as a list
     transactions = relationship("Transaction", back_populates="user", cascade="all, delete-orphan")

@@ -29,6 +29,7 @@ class Config:
     PLAID_CLIENT_ID = os.getenv('PLAID_CLIENT_ID')
     PLAID_SECRET = os.getenv('PLAID_SECRET')
     PLAID_ENV = os.getenv('PLAID_ENV', 'sandbox')
+    PLAID_WEBHOOK_URL = os.getenv('PLAID_WEBHOOK_URL', 'http://localhost:5001/plaid/webhook')
     # PLAID_PRODUCTS = os.getenv('PLAID_PRODUCTS', 'transactions').split(',')
     # PLAID_COUNTRY_CODES = os.getenv('PLAID_COUNTRY_CODES', 'US').split(',')
 

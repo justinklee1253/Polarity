@@ -59,11 +59,13 @@ def create_app():
     from .onboarding.routes import onboarding_bp
     from .chat.routes import chat_bp
     from .plaid.routes import plaid_bp
+    from .transactions.routes import transactions_bp
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(onboarding_bp)
     app.register_blueprint(chat_bp)
     app.register_blueprint(plaid_bp)
+    app.register_blueprint(transactions_bp)
 
     socketio.init_app(app)
 
