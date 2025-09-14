@@ -1,11 +1,14 @@
 """
-   # Missing endpoints:
-   - GET /transactions - Fetch user's transactions from DB
-   - POST /transactions/sync - Sync latest transactions from Plaid
-   - PUT /transactions/{id} - Update transaction categories/notes
+   Transaction Routes - Complete API endpoints for transaction management:
+   
+   ✅ GET /transactions - Fetch user's transactions from DB (with pagination, filtering, sorting)
+   ✅ GET /transactions/categories - Get unique user categories  
+   ✅ GET /transactions/summary - Get transaction summary statistics
+   ✅ PUT /transactions/{id} - Update transaction categories/notes/recurring status
+   ✅ POST /transactions/sync - Manually sync latest transactions from Plaid
 """
 
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.models import User, Transaction
 from app.database import get_db_session
@@ -31,6 +34,7 @@ def get_transactions():
     - start_date (str): Filter from date (YYYY-MM-DD)
     - end_date (str): Filter to date (YYYY-MM-DD)
     """
+    
     user_id = get_jwt_identity()
     
     # Get query parameters with defaults
@@ -40,9 +44,9 @@ def get_transactions():
     sort_order = request.args.get('sort_order', 'desc')
     
     # Filter parameters
-    transaction_type = request.args.get('type')
-    category = request.args.get('category')
-    search = request.args.get('search')
+    transaction_type = request.args.get('type') 
+    category = request.args.get('category') 
+    search = request.args.get('search') 
     start_date = request.args.get('start_date')
     end_date = request.args.get('end_date')
     
@@ -234,3 +238,85 @@ def get_transaction_summary():
             
     except Exception as e:
         return jsonify({"error": f"Failed to fetch summary: {str(e)}"}), 500
+
+@transactions_bp.route('/transactions/<int:transaction_id>', methods=['PUT'])
+@jwt_required()
+def update_transaction_details(transaction_id):
+    """
+    Update a transaction's category, notes, or other editable fields
+    """
+    user_id = get_jwt_identity()
+    data = request.get_json()
+    
+    if not data:
+        return jsonify({"error": "No data provided"}), 400
+    
+    try:
+        with get_db_session() as db:
+            # Find the transaction and verify it belongs to the user
+            transaction = db.query(Transaction).filter_by(
+                id=transaction_id, 
+                user_id=user_id
+            ).first()
+            
+            if not transaction:
+                return jsonify({"error": "Transaction not found"}), 404
+            
+            # Update allowed fields
+            if 'user_category' in data:
+                transaction.user_category = data['user_category']
+            
+            if 'notes' in data:
+                transaction.notes = data['notes']
+            
+            if 'is_recurring' in data:
+                transaction.is_recurring = bool(data['is_recurring'])
+            
+            db.commit()
+            
+            return jsonify({
+                "message": "Transaction updated successfully",
+                "transaction": {
+                    'id': transaction.id,
+                    'user_category': transaction.user_category,
+                    'notes': transaction.notes,
+                    'is_recurring': transaction.is_recurring
+                }
+            }), 200
+            
+    except Exception as e:
+        current_app.logger.error(f"Error updating transaction {transaction_id}: {str(e)}")
+        return jsonify({"error": f"Failed to update transaction: {str(e)}"}), 500
+
+@transactions_bp.route('/transactions/sync', methods=['POST'])
+@jwt_required()
+def sync_transactions_manual():
+    """
+    Manually trigger a transaction sync from Plaid
+    """
+    user_id = get_jwt_identity()
+    
+    try:
+        with get_db_session() as db:
+            user = db.query(User).get(user_id)
+            if not user:
+                return jsonify({"error": "User not found"}), 404
+            
+            if not user.plaid_access_token:
+                return jsonify({"error": "No Plaid account connected"}), 400
+            
+            # Import the sync function from plaid routes
+            from app.plaid.routes import sync_user_transactions
+            
+            # Trigger sync
+            current_app.logger.info(f"Manual transaction sync requested for user {user_id}")
+            sync_user_transactions(user_id, user.plaid_access_token)
+            
+            return jsonify({
+                "message": "Transaction sync completed successfully",
+                "user_id": user_id
+            }), 200
+            
+    except Exception as e:
+        current_app.logger.error(f"Error syncing transactions for user {user_id}: {str(e)}")
+        return jsonify({"error": f"Failed to sync transactions: {str(e)}"}), 500

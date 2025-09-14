@@ -315,17 +315,25 @@ def sync_user_transactions(user_id, access_token):
                 
                 if not existing:
                     # Create new transaction
+                    # Handle date parsing - Plaid can return either string or date object
+                    plaid_date = plaid_transaction['date']
+                    if isinstance(plaid_date, str):
+                        date_posted = datetime.strptime(plaid_date, '%Y-%m-%d').date()
+                    else:
+                        # Already a date object
+                        date_posted = plaid_date
+                    
                     transaction = Transaction(
                         user_id=user_id,
                         plaid_transaction_id=plaid_transaction['transaction_id'],
-                        date_posted=datetime.strptime(plaid_transaction['date'], '%Y-%m-%d').date(),
+                        date_posted=date_posted,
                         name=plaid_transaction['name'],
                         amount=abs(float(plaid_transaction['amount'])),
                         type='expense' if plaid_transaction['amount'] > 0 else 'income',
                         payment_source=plaid_transaction.get('account_id'),
-                        plaid_category=', '.join(plaid_transaction.get('category', [])),
+                        plaid_category=', '.join(plaid_transaction.get('category') or []),
                         # Set initial user_category to first plaid category
-                        user_category=plaid_transaction.get('category', ['Other'])[0] if plaid_transaction.get('category') else 'Other'
+                        user_category=(plaid_transaction.get('category') or ['Other'])[0]
                     )
                     db.add(transaction)
                     new_transactions += 1
@@ -333,7 +341,7 @@ def sync_user_transactions(user_id, access_token):
                     # Update existing transaction if needed
                     existing.name = plaid_transaction['name']
                     existing.amount = abs(float(plaid_transaction['amount']))
-                    existing.plaid_category = ', '.join(plaid_transaction.get('category', []))
+                    existing.plaid_category = ', '.join(plaid_transaction.get('category') or [])
                     updated_transactions += 1
             
             db.commit()

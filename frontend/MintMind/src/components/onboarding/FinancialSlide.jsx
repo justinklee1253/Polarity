@@ -20,10 +20,15 @@ const FinancialSlide = ({ onComplete, onPrev, onDataUpdate, data }) => {
 
   const onPlaidSuccess = async (public_token, metadata) => {
     try {
-      setIsConnecting(true);
+      setIsConnecting(true); //indicate bank connection is in progress --> UI spinner
+
       // Exchange public_token for access_token (this also fetches and stores balance)
       const { data } = await exchangePublicToken(public_token);
       console.log("Bank connected successfully. Balance:", data.total_balance);
+
+      // Give transaction sync a moment to complete
+      console.log("Allowing time for transaction sync...");
+      await new Promise((resolve) => setTimeout(resolve, 2000)); // Wait 2 seconds
 
       // Check if onboarding was completed by the backend
       if (data.onboarding_completed) {

@@ -11,6 +11,7 @@ import {
   delete_conversation,
   send_user_message,
 } from "@/services/chat";
+import { getCurrentUser } from "@/services/auth";
 
 const Spark = () => {
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
@@ -20,10 +21,27 @@ const Spark = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [messages, setMessages] = useState([]);
+  const [userData, setUserData] = useState(null);
 
   // Get main sidebar state
   const { state: mainSidebarState } = useSidebar();
   const isMainSidebarCollapsed = mainSidebarState === "collapsed";
+
+  // Function to fetch user data
+  const fetchUserData = async () => {
+    try {
+      const { data } = await getCurrentUser();
+      setUserData(data);
+    } catch (error) {
+      console.error("Failed to fetch user data:", error);
+    }
+  };
+
+  // Helper function to get first name from full name
+  const getFirstName = (fullName) => {
+    if (!fullName) return "Student";
+    return fullName.split(" ")[0];
+  };
 
   // Function to fetch and update conversations
   const fetchConversations = async () => {
@@ -52,6 +70,9 @@ const Spark = () => {
 
   // Check if this is the user's first visit in this session
   useEffect(() => {
+    // Fetch user data on component mount
+    fetchUserData();
+
     const hasVisitedSpark = sessionStorage.getItem("hasVisitedSpark");
     if (!hasVisitedSpark) {
       setShowWelcomeModal(true);
@@ -185,7 +206,7 @@ const Spark = () => {
       <WelcomeModal
         isOpen={showWelcomeModal}
         onClose={() => setShowWelcomeModal(false)}
-        userName="Student"
+        userName={getFirstName(userData?.name)}
       />
 
       <ConversationSidebar
