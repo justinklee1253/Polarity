@@ -11,10 +11,17 @@ app = create_app()
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 5001))  # Render provides PORT env var
     debug_mode = os.getenv('FLASK_ENV') == 'development'
-
-    socketio.run(
-        app,
-        host='0.0.0.0',
-        port=port,
-        debug=debug_mode
-    )
+    
+    # Use gunicorn for production, socketio for development
+    if os.getenv('FLASK_ENV') == 'production':
+        # For production, we'll use gunicorn with gevent workers for SocketIO
+        # This will be handled by the start command in Render
+        pass
+    else:
+        # Development mode - use socketio.run
+        socketio.run(
+            app,
+            host='0.0.0.0',
+            port=port,
+            debug=debug_mode
+        )

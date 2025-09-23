@@ -15,10 +15,12 @@ SQLALCHEMY_DATABASE_URL = os.getenv('DATABASE_URL')
 # Add SSL mode for production database connections
 if os.getenv('FLASK_ENV') == 'production':
     # Ensure SSL is required for production database connections
-    if '?' in SQLALCHEMY_DATABASE_URL:
-        SQLALCHEMY_DATABASE_URL += '&sslmode=require'
-    else:
-        SQLALCHEMY_DATABASE_URL += '?sslmode=require'
+    # Only add sslmode if it's not already present
+    if 'sslmode=' not in SQLALCHEMY_DATABASE_URL:
+        if '?' in SQLALCHEMY_DATABASE_URL:
+            SQLALCHEMY_DATABASE_URL += '&sslmode=require'
+        else:
+            SQLALCHEMY_DATABASE_URL += '?sslmode=require'
 
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine) #allows the Session factory to be used by multiple functions
