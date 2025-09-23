@@ -2,6 +2,39 @@
 # SSL applied only when needed for specific services (like Plaid)
 import sys
 
+# Apply SSL fix for Python 3.13 BEFORE importing any other modules
+if sys.version_info >= (3, 13):
+    try:
+        import urllib3.util.ssl_
+        import ssl
+        
+        # Check if already patched to avoid recursion
+        if not hasattr(urllib3.util.ssl_.create_urllib3_context, '_global_patched'):
+            def safe_create_urllib3_context(*args, **kwargs):
+                """Create SSL context without triggering recursion"""
+                try:
+                    # Create a default SSL context directly
+                    context = ssl.create_default_context()
+                    context.check_hostname = True
+                    context.verify_mode = ssl.CERT_REQUIRED
+                    # Disable old protocols
+                    context.options |= ssl.OP_NO_SSLv2
+                    context.options |= ssl.OP_NO_SSLv3
+                    context.options |= ssl.OP_NO_TLSv1
+                    context.options |= ssl.OP_NO_TLSv1_1
+                    return context
+                except Exception:
+                    # Ultimate fallback
+                    return ssl.create_default_context()
+            
+            # Mark as patched and apply globally
+            safe_create_urllib3_context._global_patched = True
+            urllib3.util.ssl_.create_urllib3_context = safe_create_urllib3_context
+            print("Applied global SSL fix for Python 3.13")
+            
+    except Exception as e:
+        print(f"Could not apply global SSL fix: {e}")
+
 import os
 from flask import Flask, jsonify
 from flask_cors import CORS

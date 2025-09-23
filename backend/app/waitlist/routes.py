@@ -7,7 +7,6 @@ Waitlist routes for early access paywall system
 """
 
 import os
-import sys
 import stripe
 import requests
 from flask import Blueprint, request, jsonify, current_app
@@ -15,35 +14,6 @@ from datetime import datetime
 from sqlalchemy.exc import IntegrityError
 from ..database import get_db_session
 from ..models import Waitlist
-
-# Apply SSL fix specifically for Stripe in Python 3.13
-# Apply SSL fix specifically for Stripe in Python 3.13
-if sys.version_info >= (3, 13):
-    try:
-        import urllib3.util.ssl_
-        import ssl
-
-        # Only patch once
-        if not getattr(urllib3.util.ssl_.create_urllib3_context, "_stripe_patched", False):
-            original_create_urllib3_context = urllib3.util.ssl_.create_urllib3_context
-
-            def stripe_safe_create_urllib3_context(*args, **kwargs):
-                """Safe SSL context for Stripe to prevent recursion errors"""
-                try:
-                    return original_create_urllib3_context(*args, **kwargs)
-                except RecursionError:
-                    # Instead of retrying original (which caused recursion), fallback cleanly
-                    context = ssl.create_default_context()
-                    context.check_hostname = True
-                    context.verify_mode = ssl.CERT_REQUIRED
-                    return context
-
-            stripe_safe_create_urllib3_context._stripe_patched = True
-            urllib3.util.ssl_.create_urllib3_context = stripe_safe_create_urllib3_context
-            print("✅ Applied Stripe SSL fix for Python 3.13")
-    except Exception as e:
-        print(f"⚠️ Could not apply Stripe SSL fix: {e}")
-
 
 # Initialize Stripe
 stripe.api_key = os.getenv('STRIPE_SECRET_KEY')
