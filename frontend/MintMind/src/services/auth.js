@@ -19,13 +19,10 @@ export async function login(credentials) {
       localStorage.setItem("access_token", data.access_token);
     }
     if (!data.onboarding_completed) {
-      //if onboarding is not completed, set the onboarding step in local storage and redirect to onboarding page.
+      //if onboarding is not completed, set the onboarding step in local storage.
       localStorage.setItem("onboarding_step", data.onboarding_step || "0");
-      window.location.href = "/onboarding";
-    } else {
-      //if onboarding is completed, redirect to dashboard page.
-      window.location.href = "/dashboard";
     }
+    // Return the data and let the calling component handle navigation
     return { data, response };
   } catch (error) {
     throw new Error(error.message || "Login failed");

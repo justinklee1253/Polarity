@@ -31,7 +31,7 @@ def create_app():
         app.config.from_object('app.config.DevelopmentConfig')
 
     # CORS configuration - environment-based
-    allowed_origins = os.getenv('CORS_ORIGINS', 'http://localhost:5173').split(',')
+    allowed_origins = os.getenv('CORS_ORIGINS', 'http://localhost:5173,https://polarity-eight.vercel.app').split(',')
     CORS(app, 
          origins=allowed_origins,
          supports_credentials=True, 
