@@ -260,146 +260,127 @@ function Auth() {
           </div>
         </section>
 
-        {/* Features Section */}
+        {/* Product Demo Section */}
         <section className="max-w-7xl mx-auto px-6 py-20">
-          <div className="text-center mb-16">
-            <h3 className="text-4xl font-bold text-white mb-4">
-              Built for mindful spending
+          <div className="text-center mb-16 animate-in fade-in duration-700">
+            {/* <div className="inline-flex items-center px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-emerald-400 text-sm font-medium mb-6">
+              Product Demo
+            </div> */}
+            <h3 className="text-4xl font-bold mb-4">
+              <span className="bg-gradient-to-r from-emerald-300 via-cyan-300 to-emerald-400 bg-clip-text text-transparent drop-shadow-lg">
+                See Polarity in action
+              </span>
             </h3>
-            <p className="text-xl text-slate-300 max-w-2xl mx-auto">
-              Our AI understands your patterns and helps you make better
-              financial decisions
-            </p>
+            <p className="text-xl text-slate-300 max-w-2xl mx-auto"></p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
-            {/* Feature 1 */}
-            <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-3xl p-8 hover:bg-white/10 transition-all duration-300 group">
-              <div className="w-12 h-12 bg-gradient-to-r from-emerald-500/20 to-cyan-500/20 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                <PiggyBank className="w-6 h-6 text-emerald-400" />
-              </div>
-              <h4 className="text-xl font-semibold text-white mb-4">
-                Smart Gambling Tracking
-              </h4>
-              <p className="text-slate-300 leading-relaxed">
-                Automatically categorize and track all gambling-related
-                transactions with intelligent pattern recognition.
-              </p>
-            </div>
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            {/* Demo 1: Plaid Integration */}
+            <div className="group animate-in slide-in-from-left duration-700 delay-200">
+              <div className="relative">
+                {/* Glowing background effect */}
+                <div className="absolute -inset-4 bg-gradient-to-r from-emerald-500/20 via-cyan-500/20 to-emerald-500/20 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
-            {/* Feature 2 */}
-            <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-3xl p-8 hover:bg-white/10 transition-all duration-300 group">
-              <div className="w-12 h-12 bg-gradient-to-r from-cyan-500/20 to-emerald-500/20 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                <BarChart3 className="w-6 h-6 text-cyan-400" />
-              </div>
-              <h4 className="text-xl font-semibold text-white mb-4">
-                Net Winnings Analysis
-              </h4>
-              <p className="text-slate-300 leading-relaxed">
-                See your true performance with detailed breakdowns of wins,
-                losses, and net outcomes over time.
-              </p>
-            </div>
+                {/* Demo card */}
+                <div className="relative backdrop-blur-xl bg-white/5 border border-white/10 rounded-3xl p-8 hover:bg-white/10 transition-all duration-500 group-hover:scale-[1.02] group-hover:shadow-2xl group-hover:shadow-emerald-500/10">
+                  {/* Demo image */}
+                  <div className="relative overflow-hidden rounded-2xl mb-4 bg-gradient-to-br from-slate-800 to-slate-900 border border-white/10">
+                    <img
+                      src="/trans2.png"
+                      alt="Plaid Integration Demo"
+                      className="w-full h-auto object-contain opacity-90 group-hover:opacity-100 transition-opacity duration-300"
+                      onError={(e) => {
+                        e.target.style.display = "none";
+                        e.target.nextSibling.style.display = "flex";
+                      }}
+                    />
+                    {/* Fallback placeholder */}
+                    <div
+                      className="w-full h-96 flex items-center justify-center bg-gradient-to-br from-emerald-500/10 to-cyan-500/10 border-2 border-dashed border-emerald-500/30"
+                      style={{ display: "none" }}
+                    >
+                      <div className="text-center">
+                        <Lock className="w-12 h-12 text-emerald-400 mx-auto mb-3" />
+                        <p className="text-emerald-400 font-medium">
+                          Plaid Integration
+                        </p>
+                        <p className="text-slate-400 text-sm">
+                          Secure bank connection
+                        </p>
+                      </div>
+                    </div>
+                  </div>
 
-            {/* Feature 3 */}
-            <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-3xl p-8 hover:bg-white/10 transition-all duration-300 group">
-              <div className="w-12 h-12 bg-gradient-to-r from-emerald-500/20 to-cyan-500/20 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                <Target className="w-6 h-6 text-emerald-400" />
-              </div>
-              <h4 className="text-xl font-semibold text-white mb-4">
-                Habit Building
-              </h4>
-              <p className="text-slate-300 leading-relaxed">
-                Set personalized goals and receive gentle nudges to build
-                healthier spending habits.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* Testimonials Section */}
-        <section className="max-w-7xl mx-auto px-6 py-20">
-          <div className="text-center mb-16">
-            <h3 className="text-4xl font-bold text-white mb-4">
-              Trusted by students nationwide
-            </h3>
-            <p className="text-xl text-slate-300">
-              See how Polarity has helped others take control of their finances
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            {/* Testimonial 1 */}
-            <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-3xl p-8">
-              <div className="flex items-center mb-4">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <Star
-                    key={star}
-                    className="w-5 h-5 text-yellow-400 fill-current"
-                  />
-                ))}
-              </div>
-              <p className="text-slate-300 mb-6">
-                "Finally, an app that understands my spending without judgment.
-                The insights have been eye-opening."
-              </p>
-              <div className="flex items-center">
-                <div className="w-10 h-10 bg-gradient-to-r from-emerald-400 to-cyan-400 rounded-full flex items-center justify-center text-white font-semibold mr-3">
-                  M
-                </div>
-                <div>
-                  <p className="text-white font-medium">Maria S.</p>
-                  <p className="text-slate-400 text-sm">Junior, UCLA</p>
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-gradient-to-r from-emerald-500/20 to-cyan-500/20 rounded-xl flex items-center justify-center">
+                        <Lock className="w-5 h-5 text-emerald-400" />
+                      </div>
+                      <h4 className="text-xl font-semibold text-white">
+                        Secure Bank Synchronization
+                      </h4>
+                    </div>
+                    <p className="text-slate-300 leading-relaxed">
+                      Connect your bank account securely with Plaid. Your
+                      financial data is encrypted and protected with bank-level
+                      security.
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Testimonial 2 */}
-            <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-3xl p-8">
-              <div className="flex items-center mb-4">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <Star
-                    key={star}
-                    className="w-5 h-5 text-yellow-400 fill-current"
-                  />
-                ))}
-              </div>
-              <p className="text-slate-300 mb-6">
-                "The AI caught patterns I never noticed. I've saved over $300
-                this semester alone."
-              </p>
-              <div className="flex items-center">
-                <div className="w-10 h-10 bg-gradient-to-r from-cyan-400 to-emerald-400 rounded-full flex items-center justify-center text-white font-semibold mr-3">
-                  J
-                </div>
-                <div>
-                  <p className="text-white font-medium">Jake T.</p>
-                  <p className="text-slate-400 text-sm">Senior, NYU</p>
-                </div>
-              </div>
-            </div>
+            {/* Demo 2: Gambling Dashboard */}
+            <div className="group animate-in slide-in-from-right duration-700 delay-400">
+              <div className="relative">
+                {/* Glowing background effect */}
+                <div className="absolute -inset-4 bg-gradient-to-r from-cyan-500/20 via-emerald-500/20 to-cyan-500/20 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
-            {/* Testimonial 3 */}
-            <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-3xl p-8">
-              <div className="flex items-center mb-4">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <Star
-                    key={star}
-                    className="w-5 h-5 text-yellow-400 fill-current"
-                  />
-                ))}
-              </div>
-              <p className="text-slate-300 mb-6">
-                "Clean interface, powerful insights. It's like having a
-                financial advisor in my pocket."
-              </p>
-              <div className="flex items-center">
-                <div className="w-10 h-10 bg-gradient-to-r from-emerald-400 to-cyan-400 rounded-full flex items-center justify-center text-white font-semibold mr-3">
-                  A
-                </div>
-                <div>
-                  <p className="text-white font-medium">Alex R.</p>
-                  <p className="text-slate-400 text-sm">Sophomore, Stanford</p>
+                {/* Demo card */}
+                <div className="relative backdrop-blur-xl bg-white/5 border border-white/10 rounded-3xl p-8 hover:bg-white/10 transition-all duration-500 group-hover:scale-[1.02] group-hover:shadow-2xl group-hover:shadow-cyan-500/10">
+                  {/* Demo image */}
+                  <div className="relative overflow-hidden rounded-2xl mb-4 bg-gradient-to-br from-slate-800 to-slate-900 border border-white/10">
+                    <img
+                      src="/gspend.png"
+                      alt="Gambling Dashboard Demo"
+                      className="w-full h-80 object-cover opacity-90 group-hover:opacity-100 transition-opacity duration-300"
+                      onError={(e) => {
+                        e.target.style.display = "none";
+                        e.target.nextSibling.style.display = "flex";
+                      }}
+                    />
+                    {/* Fallback placeholder */}
+                    <div
+                      className="w-full h-80 flex items-center justify-center bg-gradient-to-br from-cyan-500/10 to-emerald-500/10 border-2 border-dashed border-cyan-500/30"
+                      style={{ display: "none" }}
+                    >
+                      <div className="text-center">
+                        <BarChart3 className="w-12 h-12 text-cyan-400 mx-auto mb-3" />
+                        <p className="text-cyan-400 font-medium">
+                          Gambling Dashboard
+                        </p>
+                        <p className="text-slate-400 text-sm">
+                          Real-time spend tracking
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-gradient-to-r from-cyan-500/20 to-emerald-500/20 rounded-xl flex items-center justify-center">
+                        <BarChart3 className="w-5 h-5 text-cyan-400" />
+                      </div>
+                      <h4 className="text-xl font-semibold text-white">
+                        Track your total gambling spend in real time
+                      </h4>
+                    </div>
+                    <p className="text-slate-300 leading-relaxed">
+                      Monitor your total gambling spend in real time with
+                      detailed breakdowns, budget progress, and transaction
+                      history.
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -458,7 +439,7 @@ function Auth() {
             </div>
           </div>
           <div className="text-center text-slate-400 text-sm mt-8">
-            © 2024 Polarity. All rights reserved.
+            © 2025 Polarity. All rights reserved.
           </div>
         </footer>
       </div>
