@@ -263,8 +263,8 @@ const Onboarding = () => {
         if (isCompleting) {
           return (
             <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-500 mx-auto mb-4"></div>
-              <p className="text-gray-600">Setting up your account...</p>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500 mx-auto mb-4"></div>
+              <p className="text-slate-300">Setting up your account...</p>
             </div>
           );
         }
@@ -282,11 +282,41 @@ const Onboarding = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-50 via-cyan-50 to-blue-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        {/* Progress indicator */}
-        <div className="mb-8">
-          <div className="flex justify-center space-x-2">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-900 flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Enhanced background with floating particles */}
+      <div className="absolute inset-0">
+        <div
+          className="absolute top-20 left-20 w-4 h-4 bg-gradient-to-r from-emerald-400/20 to-cyan-400/20 rounded-full animate-pulse"
+          style={{ animationDelay: "0s", animationDuration: "4s" }}
+        />
+        <div
+          className="absolute top-40 right-32 w-3 h-3 bg-gradient-to-r from-cyan-400/25 to-emerald-400/25 rounded-full animate-pulse"
+          style={{ animationDelay: "1.5s", animationDuration: "5s" }}
+        />
+        <div
+          className="absolute bottom-32 left-32 w-5 h-5 bg-gradient-to-r from-emerald-400/15 to-cyan-400/15 rounded-full animate-pulse"
+          style={{ animationDelay: "2.5s", animationDuration: "6s" }}
+        />
+        <div
+          className="absolute bottom-20 right-20 w-4 h-4 bg-gradient-to-r from-cyan-400/20 to-emerald-400/20 rounded-full animate-pulse"
+          style={{ animationDelay: "1s", animationDuration: "4.5s" }}
+        />
+
+        {/* Subtle geometric shapes */}
+        <div
+          className="absolute top-16 right-16 w-16 h-16 border border-emerald-500/10 rounded-full animate-spin"
+          style={{ animationDuration: "20s" }}
+        />
+        <div
+          className="absolute bottom-16 left-16 w-12 h-12 border border-cyan-500/10 rounded-lg rotate-45 animate-pulse"
+          style={{ animationDuration: "3s" }}
+        />
+      </div>
+
+      <div className="w-full max-w-md relative z-10">
+        {/* Enhanced Progress indicator */}
+        <div className="mb-12">
+          <div className="flex justify-center space-x-3">
             {[0, 1, 2, 3, 4, 5, 6].map((step) => {
               // Skip step 4 indicator if not a college student
               if (
@@ -299,14 +329,24 @@ const Onboarding = () => {
               return (
                 <div
                   key={step}
-                  className={`h-2 w-8 rounded-full transition-all duration-300 ${
+                  className={`h-3 w-10 rounded-full transition-all duration-500 ease-out shadow-sm ${
                     step <= currentStep
-                      ? "bg-gradient-to-r from-sky-500 to-cyan-500"
-                      : "bg-gray-200"
+                      ? "bg-gradient-to-r from-emerald-500 to-cyan-500 shadow-lg transform scale-105"
+                      : "bg-slate-700/60 backdrop-blur-sm"
                   }`}
                 />
               );
             })}
+          </div>
+
+          {/* Progress percentage */}
+          <div className="mt-4 text-center">
+            <span className="text-sm font-medium text-slate-300 bg-white/10 backdrop-blur-sm px-3 py-1 rounded-full border border-emerald-400/20">
+              Step {currentStep + 1} of{" "}
+              {onboardingData.isCollegeStudent === false && currentStep > 3
+                ? 6
+                : 7}
+            </span>
           </div>
         </div>
 

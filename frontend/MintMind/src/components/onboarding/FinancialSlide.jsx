@@ -10,6 +10,15 @@ import {
   exchangePublicToken,
 } from "@/services/plaid";
 import { apiService } from "@/services/api";
+import {
+  DollarSign,
+  ChevronLeft,
+  Banknote,
+  TrendingUp,
+  Shield,
+  Loader2,
+  CreditCard,
+} from "lucide-react";
 
 const FinancialSlide = ({ onComplete, onPrev, onDataUpdate, data }) => {
   const [monthlySalary, setMonthlySalary] = useState("");
@@ -101,104 +110,143 @@ const FinancialSlide = ({ onComplete, onPrev, onDataUpdate, data }) => {
     isValidNumber(monthlySpendingGoal);
 
   return (
-    <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm animate-fade-in">
-      <CardHeader className="text-center space-y-4">
-        <CardTitle className="text-2xl font-semibold text-gray-800">
-          Let's set up your finances
-        </CardTitle>
-        <p className="text-gray-600">
-          This information helps us create personalized budgets and insights
-        </p>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label
-              htmlFor="salary"
-              className="text-sm font-medium text-gray-700"
-            >
-              Monthly Income ($)
-            </Label>
-            <Input
-              id="salary"
-              type="number"
-              placeholder="0.00"
-              value={monthlySalary}
-              onChange={(e) => {
-                setMonthlySalary(e.target.value);
-                onDataUpdate({
-                  monthlySalary: e.target.value
-                    ? parseFloat(e.target.value)
-                    : null,
-                });
-              }}
-              className="h-12 border-gray-200 focus:border-sky-500 focus:ring-sky-500 transition-colors text-lg"
-              min="0"
-              step="0.01"
-            />
+    <div className="relative overflow-hidden">
+      {/* Floating background particles */}
+      <div className="absolute inset-0 -z-10">
+        <div
+          className="absolute top-6 left-6 w-3 h-3 bg-gradient-to-r from-emerald-400/20 to-cyan-400/20 rounded-full animate-pulse"
+          style={{ animationDelay: "0.5s", animationDuration: "4.2s" }}
+        />
+        <div
+          className="absolute top-28 right-10 w-2 h-2 bg-gradient-to-r from-cyan-400/30 to-emerald-400/30 rounded-full animate-pulse"
+          style={{ animationDelay: "1.7s", animationDuration: "3.8s" }}
+        />
+        <div
+          className="absolute bottom-24 left-8 w-4 h-4 bg-gradient-to-r from-emerald-400/15 to-cyan-400/15 rounded-full animate-pulse"
+          style={{ animationDelay: "2.3s", animationDuration: "4.5s" }}
+        />
+        <div
+          className="absolute bottom-8 right-4 w-3 h-3 bg-gradient-to-r from-cyan-400/25 to-emerald-400/25 rounded-full animate-pulse"
+          style={{ animationDelay: "1.1s", animationDuration: "3.7s" }}
+        />
+      </div>
+
+      <Card className="shadow-2xl border border-white/10 bg-white/5 backdrop-blur-xl rounded-3xl overflow-hidden transition-all duration-700 ease-out transform hover:bg-white/10 animate-in fade-in duration-500">
+        {/* Subtle gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-900/20 via-transparent to-emerald-900/10 pointer-events-none" />
+
+        <CardHeader className="text-center space-y-4 pt-6 pb-4 relative">
+          <div className="space-y-3">
+            <CardTitle className="text-3xl font-bold text-white leading-relaxed">
+              Let's set up your finances
+            </CardTitle>
+            <p className="text-slate-300 text-base font-medium">
+              This information helps us create personalized budgets
+            </p>
+          </div>
+        </CardHeader>
+
+        <CardContent className="space-y-4 px-8 pb-6 relative">
+          <div className="space-y-4">
+            {/* Enhanced salary input */}
+            <div className="space-y-3">
+              <Label
+                htmlFor="salary"
+                className="text-base font-semibold text-slate-200 text-center block"
+              >
+                Monthly Income ($)
+              </Label>
+              <div className="relative">
+                <Input
+                  id="salary"
+                  type="number"
+                  placeholder="0.00"
+                  value={monthlySalary}
+                  onChange={(e) => {
+                    setMonthlySalary(e.target.value);
+                    onDataUpdate({
+                      monthlySalary: e.target.value
+                        ? parseFloat(e.target.value)
+                        : null,
+                    });
+                  }}
+                  className="h-12 px-4 border border-white/20 focus:border-emerald-400/50 focus:ring-2 focus:ring-emerald-400/20 transition-all duration-300 text-lg rounded-2xl bg-white/10 backdrop-blur-sm shadow-sm hover:shadow-md text-white placeholder:text-slate-400"
+                  min="0"
+                  step="0.01"
+                />
+              </div>
+            </div>
+
+            {/* Enhanced spending goal input */}
+            <div className="space-y-3">
+              <Label
+                htmlFor="spending-goal"
+                className="text-base font-semibold text-slate-200 text-center block"
+              >
+                Monthly Spending Goal ($)
+              </Label>
+              <div className="relative">
+                <Input
+                  id="spending-goal"
+                  type="number"
+                  placeholder="0.00"
+                  value={monthlySpendingGoal}
+                  onChange={(e) => {
+                    setMonthlySpendingGoal(e.target.value);
+                    onDataUpdate({
+                      monthlySpendingGoal: e.target.value
+                        ? parseFloat(e.target.value)
+                        : null,
+                    });
+                  }}
+                  className="h-12 px-4 border border-white/20 focus:border-emerald-400/50 focus:ring-2 focus:ring-emerald-400/20 transition-all duration-300 text-lg rounded-2xl bg-white/10 backdrop-blur-sm shadow-sm hover:shadow-md text-white placeholder:text-slate-400"
+                  min="0"
+                  step="0.01"
+                />
+              </div>
+            </div>
           </div>
 
-          <div className="space-y-2">
-            <Label
-              htmlFor="spending-goal"
-              className="text-sm font-medium text-gray-700"
-            >
-              Monthly Spending Goal ($)
-            </Label>
-            <Input
-              id="spending-goal"
-              type="number"
-              placeholder="0.00"
-              value={monthlySpendingGoal}
-              onChange={(e) => {
-                setMonthlySpendingGoal(e.target.value);
-                onDataUpdate({
-                  monthlySpendingGoal: e.target.value
-                    ? parseFloat(e.target.value)
-                    : null,
-                });
-              }}
-              className="h-12 border-gray-200 focus:border-sky-500 focus:ring-sky-500 transition-colors text-lg"
-              min="0"
-              step="0.01"
-            />
+          {/* Enhanced info card */}
+          <div className="relative">
+            <div className="bg-gradient-to-br from-white/5 via-emerald-500/5 to-cyan-500/5 p-4 rounded-2xl border border-emerald-400/20 shadow-inner backdrop-blur-sm">
+              <p className="text-slate-300 text-sm text-center font-medium">
+                Don't worry, you can always update these values later in your
+                settings.
+              </p>
+            </div>
           </div>
 
-          {/* Removed Current Available Balance field */}
-        </div>
-
-        <div className="bg-gradient-to-r from-sky-50 to-cyan-50 p-4 rounded-lg border border-sky-100">
-          <p className="text-gray-700 text-sm text-center">
-            Don't worry, you can always update these values later in your
-            settings.
-          </p>
-        </div>
-
-        <div className="flex gap-3">
-          <Button
-            onClick={onPrev}
-            variant="outline"
-            className="flex-1 h-12 border-gray-200 hover:bg-gray-50 transition-colors"
-          >
-            Back
-          </Button>
-          <Button
-            onClick={handleConnectBank}
-            disabled={!canContinue || !!linkToken || isConnecting} // Only enabled if both fields are valid and not already connecting
-            className="flex-1 h-12 bg-gradient-to-r from-sky-500 to-cyan-500 hover:from-sky-600 hover:to-cyan-600 text-white font-medium transition-all duration-200 transform hover:scale-[1.02] disabled:opacity-50 disabled:transform-none"
-          >
-            {isConnecting ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                Connecting...
-              </>
-            ) : (
-              "Connect Bank Account"
-            )}
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+          {/* Enhanced buttons */}
+          <div className="flex gap-4 pt-4">
+            <Button
+              onClick={onPrev}
+              variant="outline"
+              className="flex-1 h-12 border border-emerald-400/50 hover:border-emerald-400 hover:bg-emerald-400/10 transition-all duration-300 rounded-2xl font-semibold text-slate-300 hover:text-white shadow-sm hover:shadow-md bg-transparent"
+            >
+              Back
+            </Button>
+            <Button
+              onClick={handleConnectBank}
+              disabled={!canContinue || !!linkToken || isConnecting}
+              className="flex-1 h-12 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white font-semibold text-lg transition-all duration-300 transform hover:scale-[1.02] hover:shadow-xl disabled:opacity-50 disabled:transform-none disabled:hover:shadow-none rounded-2xl shadow-lg"
+            >
+              {isConnecting ? (
+                <span className="flex items-center justify-center space-x-2">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Connecting...</span>
+                </span>
+              ) : (
+                <span className="flex items-center justify-center space-x-2">
+                  <img src="/plaidboo2.png" alt="Plaid" className="w-5 h-5" />
+                  <span>Connect Bank</span>
+                </span>
+              )}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 
