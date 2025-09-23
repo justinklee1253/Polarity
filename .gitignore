@@ -128,3 +128,25 @@ backend/app/__pycache__/database.cpython-313.pyc
 __pycache__/
 *.pyc
 *.pyo
+
+# Image files (excluding from git commits)
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.bmp
+*.tiff
+*.tif
+*.svg
+*.webp
+*.ico
+*.avif
+
+# Image directories (if you have specific image folders)
+# Uncomment the lines below if you want to exclude entire image directories
+# images/
+# assets/images/
+# public/images/
+# frontend/MintMind/public/*.png
+# frontend/MintMind/public/*.jpg
+# frontend/MintMind/public/*.jpeg

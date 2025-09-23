@@ -197,22 +197,15 @@ function SignupModal({ isOpen, onClose }) {
             onFocus={() => setFocusedField(field)}
             onBlur={() => setFocusedField(null)}
             required
-            className={`h-10 bg-white/5 border transition-all duration-300 text-white placeholder:text-slate-400 ${
+            className={`h-10 bg-white/5 border transition-all duration-300 text-white placeholder:text-slate-400 rounded-lg ${
               isPassword ? "pr-12" : ""
             } ${
               focusedField === field
-                ? "border-emerald-500/50 bg-white/10"
+                ? "border-emerald-500/50 bg-white/10 shadow-lg shadow-emerald-500/20"
                 : validationStatus[field]
                 ? "border-emerald-500/30 bg-white/5"
                 : "border-white/10 hover:border-white/20"
             }`}
-            style={{
-              borderRadius: "12px",
-              boxShadow:
-                focusedField === field
-                  ? "0 0 0 1px rgba(16, 185, 129, 0.5), 0 10px 15px -3px rgba(16, 185, 129, 0.25)"
-                  : "none",
-            }}
           />
           {isPassword && (
             <button
@@ -233,10 +226,9 @@ function SignupModal({ isOpen, onClose }) {
             </button>
           )}
           <div
-            className={`absolute inset-0 bg-gradient-to-r from-emerald-500/20 to-cyan-500/20 opacity-0 transition-opacity duration-300 pointer-events-none ${
+            className={`absolute inset-0 bg-gradient-to-r from-emerald-500/20 to-cyan-500/20 opacity-0 transition-opacity duration-300 pointer-events-none rounded-lg ${
               focusedField === field ? "opacity-100" : ""
             }`}
-            style={{ borderRadius: "12px" }}
           />
         </div>
       </div>
@@ -260,7 +252,7 @@ function SignupModal({ isOpen, onClose }) {
               Join Polarity
             </DialogTitle>
             <DialogDescription className="text-slate-300 mt-1">
-              Create your account and start managing your finances smarter
+              Create your account and take control of your spending habits
             </DialogDescription>
           </DialogHeader>
 
@@ -358,7 +350,7 @@ function SignupModal({ isOpen, onClose }) {
               {/* Submit Button */}
               <Button
                 type="submit"
-                className="w-full h-11 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white font-semibold transition-all duration-300 transform hover:scale-[1.02] hover:shadow-xl hover:shadow-emerald-500/25 rounded-xl mt-6 relative overflow-hidden group"
+                className="w-full h-11 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white font-semibold transition-all duration-300 transform hover:scale-[1.02] hover:shadow-xl hover:shadow-emerald-500/25 rounded-lg mt-6 relative overflow-hidden group border-0"
                 disabled={
                   isLoading || !Object.values(validationStatus).every(Boolean)
                 }
@@ -386,7 +378,7 @@ function SignupModal({ isOpen, onClose }) {
                 onClick={onClose}
                 className="text-emerald-400 hover:text-emerald-300 font-semibold hover:underline transition-all duration-300 transform hover:scale-105 inline-block"
               >
-                Sign in instead
+                Login instead
               </button>
             </p>
           </div>

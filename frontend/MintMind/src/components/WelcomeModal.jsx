@@ -20,15 +20,16 @@ const WelcomeModal = ({ isOpen, onClose, userName = "Student" }) => {
             </DialogTitle>
             <p className="text-slate-300 mt-2">
               Meet <span className="text-emerald-400 font-semibold">Spark</span>{" "}
-              – Your Smart Money Mentor
+              – Your Mindful Spending Companion
             </p>
           </div>
         </DialogHeader>
 
         <div className="space-y-6">
           <p className="text-slate-300 text-center leading-relaxed">
-            I'm here to transform how you think about money as a college
-            student. Let's build your financial future together!
+            I'm here to help you develop mindful spending habits and take
+            control of your financial wellbeing. Let's build a healthier
+            relationship with money together!
           </p>
 
           <div className="space-y-3">
@@ -87,7 +88,7 @@ const WelcomeModal = ({ isOpen, onClose, userName = "Student" }) => {
 
           <Button
             onClick={onClose}
-            className="w-full bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white font-medium py-3 shadow-lg hover:shadow-emerald-500/25 transition-all duration-300 hover:scale-[1.02] border-0"
+            className="w-full bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white font-semibold py-3 shadow-lg hover:shadow-emerald-500/25 transition-all duration-300 hover:scale-[1.02] border-0 rounded-lg"
           >
             Let's Build Your Financial Future
           </Button>
