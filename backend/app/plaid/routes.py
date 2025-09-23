@@ -1,4 +1,6 @@
 import os
+import ssl
+import sys
 import plaid
 from plaid.api import plaid_api
 from plaid.model.link_token_create_request import LinkTokenCreateRequest
@@ -22,14 +24,38 @@ from datetime import datetime, date
 import hashlib
 import hmac
 
+# Fix for Python 3.13 SSL context recursion error
+# This is a known issue with urllib3 and Python 3.13
+if sys.version_info >= (3, 13):
+    import urllib3.util.ssl_
+    # Monkey patch to fix the SSL context recursion issue
+    original_create_urllib3_context = urllib3.util.ssl_.create_urllib3_context
+    
+    def patched_create_urllib3_context(*args, **kwargs):
+        context = original_create_urllib3_context(*args, **kwargs)
+        # Set minimum version without triggering the recursion
+        try:
+            context.minimum_version = ssl.TLSVersion.TLSv1_2
+        except Exception:
+            # Fallback if the above fails
+            pass
+        return context
+    
+    urllib3.util.ssl_.create_urllib3_context = patched_create_urllib3_context
+
 plaid_bp = Blueprint('plaid', __name__, url_prefix='/plaid')
 
 # Initialize SocketIO (assuming you have it set up in your main app)
 # socketio = SocketIO(cors_allowed_origins="*")
 
 #Set up Plaid API client
+# Use production environment if PLAID_ENV is set to 'production', otherwise use sandbox
+plaid_env = os.getenv('PLAID_ENV', 'sandbox').lower()
+plaid_host = plaid.Environment.Production if plaid_env == 'production' else plaid.Environment.Sandbox
+
 configuration = plaid.Configuration(
-    host=plaid.Environment.Sandbox, #set to sandbox testing env for dev, real app uses plaid.Environment.Production
+    host=plaid_host,
+    #  host=plaid.Environment.Sandbox, #set to sandbox testing env for dev, real app uses plaid.Environment.Production
     api_key={
         'clientId': os.getenv('PLAID_CLIENT_ID'), #client id and secret pulled from .env file
         'secret': os.getenv('PLAID_SECRET'),
@@ -128,40 +154,61 @@ def verify_plaid_webhook_signature(raw_body, headers):
 @plaid_bp.route('/create_link_token', methods=['POST'])
 @jwt_required()
 def create_link_token():
-    user_id = get_jwt_identity() #get user id from jwt token from frontend
-    
-    # Define webhook URL (adjust this to your deployed backend URL in production)
-    webhook_url = current_app.config.get('PLAID_WEBHOOK_URL', 'http://localhost:5001/plaid/webhook')
-    
-    request_obj = LinkTokenCreateRequest( #make request to plaid api to create link token
-        products=[Products('transactions')],
-        client_name="Polarity", 
-        country_codes=[CountryCode('US')],
-        language='en',
-        webhook=webhook_url,  # Add webhook endpoint to tell plaid where to send notifications
-        transactions={
-            'days_requested': 90  # Request 90 days of transaction history (default, can be up to 730)
-        },
-        user=LinkTokenCreateRequestUser(
-            client_user_id=user_id
+    try:
+        user_id = get_jwt_identity() #get user id from jwt token from frontend
+        
+        # Log the attempt
+        current_app.logger.info(f"Creating Plaid link token for user {user_id}")
+        
+        # Define webhook URL (adjust this to your deployed backend URL in production)
+        webhook_url = current_app.config.get('PLAID_WEBHOOK_URL', 'http://localhost:5001/plaid/webhook')
+        
+        # Log configuration details (without sensitive data)
+        current_app.logger.info(f"Plaid environment: {plaid_env}, Webhook URL: {webhook_url}")
+        
+        request_obj = LinkTokenCreateRequest( #make request to plaid api to create link token
+            products=[Products('transactions')],
+            client_name="Polarity", 
+            country_codes=[CountryCode('US')],
+            language='en',
+            webhook=webhook_url,  # Add webhook endpoint to tell plaid where to send notifications
+            transactions={
+                'days_requested': 90  # Request 90 days of transaction history (default, can be up to 730)
+            },
+            user=LinkTokenCreateRequestUser(
+                client_user_id=user_id
+            )
         )
-    )
-    response = client.link_token_create(request_obj)
-
-    # # Debug: Print the response to console
-    # print("=== PLAID LINK TOKEN RESPONSE ===")
-    # print(f"Type: {type(response)}")
-    # print(f"Response object: {response}")
-    # print(f"Response dict: {response.to_dict()}")
-    # print(f"Link token (first 20 chars): {response.to_dict().get('link_token', 'N/A')[:20]}...")
-    # print(f"Expiration: {response.to_dict().get('expiration', 'N/A')}")
-    # print(f"Request ID: {response.to_dict().get('request_id', 'N/A')}")
-    # print("================================")
-    
-    # Also log it properly
-    current_app.logger.info(f"Plaid link token response: {response.to_dict()}")
-    
-    return jsonify(response.to_dict())
+        
+        current_app.logger.info("Making Plaid API call to create link token...")
+        response = client.link_token_create(request_obj)
+        
+        # Log successful response
+        current_app.logger.info(f"Plaid link token created successfully for user {user_id}")
+        current_app.logger.info(f"Link token (first 20 chars): {response.to_dict().get('link_token', 'N/A')[:20]}...")
+        
+        return jsonify(response.to_dict())
+        
+    except Exception as e:
+        current_app.logger.error(f"Error creating Plaid link token for user {user_id}: {str(e)}")
+        current_app.logger.error(f"Exception type: {type(e).__name__}")
+        
+        # Return a more specific error message
+        if "RecursionError" in str(e):
+            return jsonify({
+                "error": "SSL configuration error. Please contact support.",
+                "details": "Internal server error during SSL setup"
+            }), 500
+        elif "API" in str(e) or "plaid" in str(e).lower():
+            return jsonify({
+                "error": "Plaid API error. Please check your configuration.",
+                "details": str(e)
+            }), 500
+        else:
+            return jsonify({
+                "error": "Failed to create link token",
+                "details": str(e)
+            }), 500
 
 @plaid_bp.route('/exchange_public_token', methods=['POST'])
 @jwt_required()
