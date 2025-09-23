@@ -19,6 +19,7 @@ import {
   Loader2,
   CreditCard,
 } from "lucide-react";
+import plaidImg from "@/assets/images/plaidboo2.png";
 
 const FinancialSlide = ({ onComplete, onPrev, onDataUpdate, data }) => {
   const [monthlySalary, setMonthlySalary] = useState("");
@@ -238,7 +239,7 @@ const FinancialSlide = ({ onComplete, onPrev, onDataUpdate, data }) => {
                 </span>
               ) : (
                 <span className="flex items-center justify-center space-x-2">
-                  <img src="/plaidboo2.png" alt="Plaid" className="w-5 h-5" />
+                  <img src={plaidImg} alt="Plaid" className="w-5 h-5" />
                   <span>Connect Bank</span>
                 </span>
               )}

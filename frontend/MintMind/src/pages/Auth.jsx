@@ -28,9 +28,11 @@ import {
   BarChart3,
   Target,
 } from "lucide-react";
-// Use public folder paths for images
-const plaidImg = "/plaidboo2.png";
-const openaiImg = "/openai-icon.png";
+// Import images from assets
+import plaidImg from "@/assets/images/plaidboo2.png";
+import openaiImg from "@/assets/images/openai-icon.png";
+import trans2Img from "@/assets/images/trans2.png";
+import gspendImg from "@/assets/images/gspend.png";
 
 function Auth() {
   const [email, setEmail] = useState("");
@@ -286,7 +288,7 @@ function Auth() {
                   {/* Demo image */}
                   <div className="relative overflow-hidden rounded-2xl mb-4 bg-gradient-to-br from-slate-800 to-slate-900 border border-white/10">
                     <img
-                      src="/trans2.png"
+                      src={trans2Img}
                       alt="Plaid Integration Demo"
                       className="w-full h-auto object-contain opacity-90 group-hover:opacity-100 transition-opacity duration-300"
                       onError={(e) => {
@@ -341,7 +343,7 @@ function Auth() {
                   {/* Demo image */}
                   <div className="relative overflow-hidden rounded-2xl mb-4 bg-gradient-to-br from-slate-800 to-slate-900 border border-white/10">
                     <img
-                      src="/gspend.png"
+                      src={gspendImg}
                       alt="Gambling Dashboard Demo"
                       className="w-full h-80 object-cover opacity-90 group-hover:opacity-100 transition-opacity duration-300"
                       onError={(e) => {
