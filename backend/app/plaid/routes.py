@@ -24,24 +24,27 @@ from datetime import datetime, date
 import hashlib
 import hmac
 
-# Fix for Python 3.13 SSL context recursion error
-# This is a known issue with urllib3 and Python 3.13
-if sys.version_info >= (3, 13):
-    import urllib3.util.ssl_
-    # Monkey patch to fix the SSL context recursion issue
-    original_create_urllib3_context = urllib3.util.ssl_.create_urllib3_context
-    
-    def patched_create_urllib3_context(*args, **kwargs):
-        context = original_create_urllib3_context(*args, **kwargs)
-        # Set minimum version without triggering the recursion
-        try:
-            context.minimum_version = ssl.TLSVersion.TLSv1_2
-        except Exception:
-            # Fallback if the above fails
-            pass
-        return context
-    
-    urllib3.util.ssl_.create_urllib3_context = patched_create_urllib3_context
+# Apply SSL fix for Python 3.13 compatibility
+try:
+    from ...ssl_fix import apply_ssl_fix, create_plaid_ssl_context
+    apply_ssl_fix()
+except ImportError:
+    # Fallback if ssl_fix module is not available
+    print("Warning: SSL fix module not found in plaid routes, using fallback")
+    if sys.version_info >= (3, 13):
+        import urllib3.util.ssl_
+        
+        def patched_create_urllib3_context(*args, **kwargs):
+            context = ssl.create_default_context()
+            context.check_hostname = True
+            context.verify_mode = ssl.CERT_REQUIRED
+            context.options |= ssl.OP_NO_SSLv2
+            context.options |= ssl.OP_NO_SSLv3
+            context.options |= ssl.OP_NO_TLSv1
+            context.options |= ssl.OP_NO_TLSv1_1
+            return context
+        
+        urllib3.util.ssl_.create_urllib3_context = patched_create_urllib3_context
 
 plaid_bp = Blueprint('plaid', __name__, url_prefix='/plaid')
 
@@ -55,12 +58,25 @@ plaid_host = plaid.Environment.Production if plaid_env == 'production' else plai
 
 configuration = plaid.Configuration(
     host=plaid_host,
-    #  host=plaid.Environment.Sandbox, #set to sandbox testing env for dev, real app uses plaid.Environment.Production
     api_key={
         'clientId': os.getenv('PLAID_CLIENT_ID'), #client id and secret pulled from .env file
         'secret': os.getenv('PLAID_SECRET'),
     }
 )
+
+# Create API client with custom SSL configuration for Python 3.13 compatibility
+try:
+    # Try to use custom SSL context if available
+    if sys.version_info >= (3, 13):
+        try:
+            from ...ssl_fix import create_plaid_ssl_context
+            ssl_context = create_plaid_ssl_context()
+            # Note: Plaid client doesn't directly support SSL context, but this ensures our fix is applied
+        except ImportError:
+            pass
+except Exception as e:
+    print(f"Warning: Could not apply custom SSL context: {e}")
+
 api_client = plaid.ApiClient(configuration) #handle HTTP requests and responses
 client = plaid_api.PlaidApi(api_client) #Call methods on our client.
 

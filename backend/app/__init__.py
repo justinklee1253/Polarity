@@ -1,6 +1,5 @@
 import os
 import sys
-import ssl
 from flask import Flask, jsonify
 from flask_cors import CORS
 from .config import Config
@@ -11,24 +10,28 @@ from .extensions import blacklist
 
 from flask_socketio import SocketIO
 
-# Fix for Python 3.13 SSL context recursion error
-# This is a known issue with urllib3 and Python 3.13
-if sys.version_info >= (3, 13):
-    import urllib3.util.ssl_
-    # Monkey patch to fix the SSL context recursion issue
-    original_create_urllib3_context = urllib3.util.ssl_.create_urllib3_context
-    
-    def patched_create_urllib3_context(*args, **kwargs):
-        context = original_create_urllib3_context(*args, **kwargs)
-        # Set minimum version without triggering the recursion
-        try:
-            context.minimum_version = ssl.TLSVersion.TLSv1_2
-        except Exception:
-            # Fallback if the above fails
-            pass
-        return context
-    
-    urllib3.util.ssl_.create_urllib3_context = patched_create_urllib3_context
+# Apply SSL fix for Python 3.13 compatibility
+try:
+    from ..ssl_fix import apply_ssl_fix
+    apply_ssl_fix()
+except ImportError:
+    # Fallback if ssl_fix module is not available
+    print("Warning: SSL fix module not found, using fallback")
+    if sys.version_info >= (3, 13):
+        import ssl
+        import urllib3.util.ssl_
+        
+        def patched_create_urllib3_context(*args, **kwargs):
+            context = ssl.create_default_context()
+            context.check_hostname = True
+            context.verify_mode = ssl.CERT_REQUIRED
+            context.options |= ssl.OP_NO_SSLv2
+            context.options |= ssl.OP_NO_SSLv3
+            context.options |= ssl.OP_NO_TLSv1
+            context.options |= ssl.OP_NO_TLSv1_1
+            return context
+        
+        urllib3.util.ssl_.create_urllib3_context = patched_create_urllib3_context
 
 blacklist = set()
 # SocketIO CORS - environment-based (default to * for local dev, restrict in production)
