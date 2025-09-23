@@ -156,8 +156,8 @@ def login():
                     "refresh_token",
                     refresh_token,
                     httponly=True, #can't be accessed by JS
-                    secure=False, #only over HTTP, False for local dev
-                    samesite='Lax' #lax for dev, strict for prod
+                    secure=current_app.config.get('JWT_COOKIE_SECURE', False), #environment-based
+                    samesite='Lax' if current_app.config.get('DEBUG', True) else 'Strict' #lax for dev, strict for prod
                 )
                 return resp, 200
             else:

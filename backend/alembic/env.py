@@ -15,7 +15,7 @@ dotenv.load_dotenv()
 # access to the values within the .ini file in use.
 config = context.config
 config.set_main_option('sqlalchemy.url', os.getenv('DATABASE_URL', ""))
-print("Running migrations with DATABASE_URL =", os.getenv('DATABASE_URL'))
+# print("Running migrations with DATABASE_URL =", os.getenv('DATABASE_URL'))  # Commented out for security
 
 
 # Interpret the config file for Python logging.

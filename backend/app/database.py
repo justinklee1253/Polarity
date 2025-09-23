@@ -10,7 +10,7 @@ from sqlalchemy.orm import sessionmaker
 load_dotenv()
 
 SQLALCHEMY_DATABASE_URL = os.getenv('DATABASE_URL')
-# print(f"Database URL: {SQLALCHEMY_DATABASE_URL}") #DEBUG LINE
+# print(f"Database URL: {SQLALCHEMY_DATABASE_URL}") #DEBUG LINE - Commented out for security
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine) #allows the Session factory to be used by multiple functions
 

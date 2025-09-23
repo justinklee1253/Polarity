@@ -1,3 +1,4 @@
+import os
 from flask import Flask, jsonify
 from flask_cors import CORS
 from .config import Config
@@ -9,7 +10,9 @@ from .extensions import blacklist
 from flask_socketio import SocketIO
 
 blacklist = set()
-socketio = SocketIO(cors_allowed_origins="*")
+# SocketIO CORS - environment-based (default to * for local dev, restrict in production)
+socketio_cors_origins = os.getenv('SOCKETIO_CORS_ORIGINS', '*')
+socketio = SocketIO(cors_allowed_origins=socketio_cors_origins)
 
 def create_app():
     """
@@ -22,10 +25,10 @@ def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
 
+    # CORS configuration - environment-based
+    allowed_origins = os.getenv('CORS_ORIGINS', 'http://localhost:5173').split(',')
     CORS(app, 
-         origins=[
-             "http://localhost:5173", #localhost dev server
-         ],
+         origins=allowed_origins,
          supports_credentials=True, 
          allow_headers=[
              "Content-Type",

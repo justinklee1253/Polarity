@@ -247,6 +247,36 @@ export async function getCurrentMonthTransactions() {
   });
 }
 
+/**
+ * Get gambling spending data for the user
+ * @returns {Promise<Object>} Response with gambling spending statistics
+ */
+export async function getGamblingSpend() {
+  const token = localStorage.getItem("access_token");
+
+  return apiService.request("/transactions/gambling-spend", {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+}
+
+/**
+ * Get spending data over time for chart visualization
+ * @returns {Promise<Object>} Response with 90-day spending data for charts
+ */
+export async function getSpendingOverTime() {
+  const token = localStorage.getItem("access_token");
+
+  return apiService.request("/transactions/spending-over-time", {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+}
+
 // Export all functions as named exports for easier importing
 export default {
   getTransactions,
@@ -261,4 +291,6 @@ export default {
   searchTransactions,
   getRecentTransactions,
   getCurrentMonthTransactions,
+  getGamblingSpend,
+  getSpendingOverTime,
 };

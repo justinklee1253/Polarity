@@ -7,8 +7,12 @@ import {
   DollarSign,
   TrendingUp,
   Shield,
+  AlertTriangle,
+  Activity,
 } from "lucide-react";
 import TransactionTable from "@/components/TransactionTable";
+import SpendingChart from "@/components/SpendingChart";
+import { getGamblingSpend, getSpendingOverTime } from "@/services/transactions";
 import { useState, useEffect, useRef, useCallback } from "react";
 
 function Dashboard() {
@@ -21,6 +25,9 @@ function Dashboard() {
   const [animatedIncome, setAnimatedIncome] = useState(0);
   const [animatedSpent, setAnimatedSpent] = useState(0);
   const [particles, setParticles] = useState([]);
+  const [gamblingData, setGamblingData] = useState(null);
+  const [spendingChartData, setSpendingChartData] = useState(null);
+  const [chartLoading, setChartLoading] = useState(true);
   const balanceRef = useRef(0);
   const incomeRef = useRef(0);
   const spentRef = useRef(0);
@@ -143,6 +150,30 @@ function Dashboard() {
   useEffect(() => {
     fetchUserData();
   }, [fetchUserData]);
+
+  // Fetch gambling spending and chart data
+  const fetchGamblingData = useCallback(async () => {
+    try {
+      setChartLoading(true);
+      const [gamblingResponse, chartResponse] = await Promise.all([
+        getGamblingSpend(),
+        getSpendingOverTime(),
+      ]);
+
+      setGamblingData(gamblingResponse.data);
+      setSpendingChartData(chartResponse.data);
+    } catch (error) {
+      console.error("Error fetching gambling data:", error);
+    } finally {
+      setChartLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (userData) {
+      fetchGamblingData();
+    }
+  }, [userData, fetchGamblingData]);
 
   const handleLogout = async () => {
     try {
@@ -298,83 +329,128 @@ function Dashboard() {
           </div>
         </div>
 
-        {/* Quick Stats Row */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-          {/* Current Balance Card */}
-          <Card className="group backdrop-blur-xl bg-white/5 border border-white/10 shadow-2xl shadow-black/20 rounded-2xl hover:shadow-emerald-500/10 hover:border-emerald-500/20 transition-all duration-500 animate-in fade-in-0 duration-1000 delay-700">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-              <CardTitle className="text-sm font-medium text-slate-300 group-hover:text-emerald-300 transition-colors duration-300">
+        {/* Modern Metric Cards - No Card Outlines */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-6">
+          {/* Current Balance */}
+          <div className="group animate-in fade-in-0 duration-1000 delay-700">
+            <div className="flex items-center justify-between mb-1">
+              <h3 className="text-sm font-medium text-slate-300 group-hover:text-emerald-300 transition-colors duration-300">
                 Current Balance
-              </CardTitle>
-              <div className="p-2 rounded-xl bg-emerald-500/20 group-hover:bg-emerald-500/30 transition-all duration-300 group-hover:scale-110">
-                <Wallet className="h-5 w-5 text-emerald-400" />
+              </h3>
+              <div className="p-1.5 rounded-lg bg-emerald-500/20 group-hover:bg-emerald-500/30 transition-all duration-300 group-hover:scale-110">
+                <DollarSign className="h-4 w-4 text-emerald-400" />
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-white mb-2 group-hover:text-emerald-300 transition-colors duration-300">
-                ${Math.floor(animatedBalance).toLocaleString()}
-              </div>
-              <div className="flex items-center gap-2 text-xs text-slate-400">
-                <TrendingUp className="h-3 w-3 text-emerald-400" />
-                <span>Available funds</span>
-              </div>
-            </CardContent>
-          </Card>
+            </div>
+            <div className="text-2xl font-bold text-white mb-0.5 group-hover:text-emerald-300 transition-colors duration-300">
+              ${Math.floor(animatedBalance).toLocaleString()}
+            </div>
+            <div className="flex items-center gap-1 text-xs text-slate-400">
+              <TrendingUp className="h-3 w-3 text-emerald-400" />
+              <span>Available funds</span>
+            </div>
+          </div>
 
-          {/* Monthly Income Card */}
-          <Card className="group backdrop-blur-xl bg-white/5 border border-white/10 shadow-2xl shadow-black/20 rounded-2xl hover:shadow-cyan-500/10 hover:border-cyan-500/20 transition-all duration-500 animate-in fade-in-0 duration-1000 delay-1000">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-              <CardTitle className="text-sm font-medium text-slate-300 group-hover:text-cyan-300 transition-colors duration-300">
-                Monthly Income
-              </CardTitle>
-              <div className="p-2 rounded-xl bg-cyan-500/20 group-hover:bg-cyan-500/30 transition-all duration-300 group-hover:scale-110">
-                <DollarSign className="h-5 w-5 text-cyan-400" />
+          {/* Total Gambling Spend */}
+          <div className="group animate-in fade-in-0 duration-1000 delay-1000">
+            <div className="flex items-center justify-between mb-1">
+              <h3 className="text-sm font-medium text-slate-300 group-hover:text-red-300 transition-colors duration-300">
+                Total Gambling Spend
+              </h3>
+              <div className="p-1.5 rounded-lg bg-red-500/20 group-hover:bg-red-500/30 transition-all duration-300 group-hover:scale-110">
+                <AlertTriangle className="h-4 w-4 text-red-400" />
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-white mb-2 group-hover:text-cyan-300 transition-colors duration-300">
-                ${Math.floor(animatedIncome).toLocaleString()}
-              </div>
-              <div className="flex items-center gap-2 text-xs text-slate-400">
-                <TrendingUp className="h-3 w-3 text-cyan-400" />
-                <span>This month</span>
-              </div>
-            </CardContent>
-          </Card>
+            </div>
+            <div className="text-2xl font-bold text-white mb-0.5 group-hover:text-red-300 transition-colors duration-300">
+              $
+              {gamblingData
+                ? gamblingData.current_month_gambling.toLocaleString()
+                : "0"}
+            </div>
+            <div className="flex items-center gap-1 text-xs text-slate-400">
+              <Activity className="h-3 w-3 text-red-400" />
+              <span>This month</span>
+            </div>
+          </div>
 
-          {/* Monthly Budget Card */}
-          <Card className="group backdrop-blur-xl bg-white/5 border border-white/10 shadow-2xl shadow-black/20 rounded-2xl hover:shadow-purple-500/10 hover:border-purple-500/20 transition-all duration-500 animate-in fade-in-0 duration-1000 delay-1300">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-              <CardTitle className="text-sm font-medium text-slate-300 group-hover:text-purple-300 transition-colors duration-300">
-                Monthly Budget
-              </CardTitle>
-              <div className="p-2 rounded-xl bg-purple-500/20 group-hover:bg-purple-500/30 transition-all duration-300 group-hover:scale-110">
-                <Target className="h-5 w-5 text-purple-400" />
+          {/* Gambling Budget with Progress */}
+          <div className="group animate-in fade-in-0 duration-1000 delay-1300">
+            <div className="flex items-center justify-between mb-1">
+              <h3 className="text-sm font-medium text-slate-300 group-hover:text-purple-300 transition-colors duration-300">
+                Gambling Budget
+              </h3>
+              <div className="p-1.5 rounded-lg bg-purple-500/20 group-hover:bg-purple-500/30 transition-all duration-300 group-hover:scale-110">
+                <Target className="h-4 w-4 text-purple-400" />
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-white mb-2 group-hover:text-purple-300 transition-colors duration-300">
-                ${Math.floor(animatedSpent).toLocaleString()}/
-                <span className="text-2xl">
-                  ${monthlyBudget.toLocaleString()}
-                </span>
-              </div>
+            </div>
+            <div className="text-2xl font-bold text-white mb-1 group-hover:text-purple-300 transition-colors duration-300">
+              $
+              {gamblingData
+                ? gamblingData.current_month_gambling.toLocaleString()
+                : "0"}{" "}
+              / ${monthlyBudget.toLocaleString()}
+            </div>
+            <div className="space-y-1.5">
               <div className="flex items-center justify-between text-xs">
                 <span className="text-slate-400">
-                  ${remainingBudget.toLocaleString()} remaining
+                  $
+                  {Math.max(
+                    monthlyBudget -
+                      (gamblingData ? gamblingData.current_month_gambling : 0),
+                    0
+                  ).toLocaleString()}{" "}
+                  left
                 </span>
+                <span className="text-slate-400">
+                  {Math.round(
+                    ((gamblingData ? gamblingData.current_month_gambling : 0) /
+                      monthlyBudget) *
+                      100
+                  )}
+                  %
+                </span>
+              </div>
+              <div className="w-full bg-slate-700 rounded-full h-1.5">
                 <div
-                  className={`w-12 h-1 rounded-full ${
-                    remainingBudget > monthlyBudget * 0.3
-                      ? "bg-emerald-500"
-                      : remainingBudget > monthlyBudget * 0.1
+                  className={`h-1.5 rounded-full transition-all duration-500 ${
+                    (gamblingData ? gamblingData.current_month_gambling : 0) /
+                      monthlyBudget >
+                    0.8
+                      ? "bg-red-500"
+                      : (gamblingData
+                          ? gamblingData.current_month_gambling
+                          : 0) /
+                          monthlyBudget >
+                        0.5
                       ? "bg-yellow-500"
-                      : "bg-red-500"
+                      : "bg-emerald-500"
                   }`}
+                  style={{
+                    width: `${Math.min(
+                      ((gamblingData
+                        ? gamblingData.current_month_gambling
+                        : 0) /
+                        monthlyBudget) *
+                        100,
+                      100
+                    )}%`,
+                  }}
                 />
               </div>
-            </CardContent>
-          </Card>
+              <div className="text-xs text-slate-400">
+                ${gamblingData ? gamblingData.daily_average.toFixed(2) : "0.00"}{" "}
+                per day
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Spending Chart */}
+        <div className="mb-6">
+          <SpendingChart
+            chartData={spendingChartData?.chart_data}
+            summary={spendingChartData?.summary}
+            loading={chartLoading}
+          />
         </div>
 
         {/* Transaction Table */}

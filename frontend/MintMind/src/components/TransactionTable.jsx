@@ -248,9 +248,9 @@ const TransactionTable = ({ currentBalance = 0, onTransactionsUpdate }) => {
       setAutoRefreshing(true);
       refreshInterval = setInterval(() => {
         refreshCount++;
-        console.log(
-          `Auto-refreshing transactions (${refreshCount}/${maxRefreshes})`
-        );
+        // console.log(
+        //   `Auto-refreshing transactions (${refreshCount}/${maxRefreshes})`
+        // );
         fetchTransactions();
 
         // Stop auto-refreshing after max attempts or if transactions are found
@@ -272,9 +272,9 @@ const TransactionTable = ({ currentBalance = 0, onTransactionsUpdate }) => {
   useEffect(() => {
     if (transactions.length > 0 && autoRefreshing) {
       // Transactions found, no need to continue auto-refreshing
-      console.log(
-        `Found ${transactions.length} transactions, stopping auto-refresh`
-      );
+      // console.log(
+      //   `Found ${transactions.length} transactions, stopping auto-refresh`
+      // );
       setAutoRefreshing(false);
     }
   }, [transactions.length, autoRefreshing]);

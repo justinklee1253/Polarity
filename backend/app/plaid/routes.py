@@ -282,10 +282,12 @@ def update_balance():
     
 def sync_user_transactions(user_id, access_token):
     """
-    Fetch and store transactions from Plaid
+    Fetch and store transactions from Plaid with automatic gambling detection and intelligent categorization
     """
     try:
         from datetime import datetime, timedelta
+        from ..gambling_detection import get_gambling_detection_details, categorize_gambling_transaction
+        from ..transaction_categorization import categorize_transaction
         
         # Get transactions from last 90 days
         start_date = (datetime.now() - timedelta(days=90)).date()
@@ -303,10 +305,26 @@ def sync_user_transactions(user_id, access_token):
         
         current_app.logger.info(f"Fetched {len(transactions)} of {total_transactions} transactions for user {user_id}")
         
+        # Debug: Log sample transaction to see what Plaid is returning
+        if transactions:
+            sample_tx = transactions[0]
+            current_app.logger.info(f"Sample Plaid transaction: {sample_tx.get('name')} - Categories: {sample_tx.get('category')} - Merchant: {sample_tx.get('merchant_name')}")
+        
         new_transactions = 0
         updated_transactions = 0
+        gambling_transactions_detected = 0
         
         with get_db_session() as db:
+            # Get user's existing transactions for recurring detection
+            existing_user_transactions = db.query(Transaction).filter_by(user_id=user_id).all()
+            user_transactions_for_categorization = []
+            for tx in existing_user_transactions:
+                user_transactions_for_categorization.append({
+                    'name': tx.name,
+                    'amount': float(tx.amount),
+                    'date': tx.date_posted.isoformat()
+                })
+            
             for plaid_transaction in transactions: #**BUG** Batching or Celery to reduce load times. Syncing 1000+ transactions at once.
                 # Check if transaction already exists
                 existing = db.query(Transaction).filter_by(
@@ -314,7 +332,7 @@ def sync_user_transactions(user_id, access_token):
                 ).first()
                 
                 if not existing:
-                    # Create new transaction
+                    # Create new transaction with gambling detection and intelligent categorization
                     # Handle date parsing - Plaid can return either string or date object
                     plaid_date = plaid_transaction['date']
                     if isinstance(plaid_date, str):
@@ -322,6 +340,24 @@ def sync_user_transactions(user_id, access_token):
                     else:
                         # Already a date object
                         date_posted = plaid_date
+                    
+                    # Perform gambling detection first
+                    gambling_detection = get_gambling_detection_details(plaid_transaction)
+                    
+                    # Determine user category and recurring status
+                    if gambling_detection.is_gambling:
+                        user_category = categorize_gambling_transaction(plaid_transaction)
+                        is_recurring = False  # Gambling transactions are typically not recurring
+                        gambling_transactions_detected += 1
+                        current_app.logger.info(f"Gambling transaction detected: {plaid_transaction['name']} - {user_category}")
+                    else:
+                        # Use intelligent categorization for non-gambling transactions
+                        categorization_result = categorize_transaction(plaid_transaction, user_transactions_for_categorization)
+                        user_category = categorization_result.category
+                        is_recurring = categorization_result.is_recurring
+                        
+                        # Log categorization details for debugging
+                        current_app.logger.info(f"Transaction categorized: {plaid_transaction['name']} -> {user_category} (method: {categorization_result.detection_method}, confidence: {categorization_result.confidence:.2f})")
                     
                     transaction = Transaction(
                         user_id=user_id,
@@ -332,20 +368,40 @@ def sync_user_transactions(user_id, access_token):
                         type='expense' if plaid_transaction['amount'] > 0 else 'income',
                         payment_source=plaid_transaction.get('account_id'),
                         plaid_category=', '.join(plaid_transaction.get('category') or []),
-                        # Set initial user_category to first plaid category
-                        user_category=(plaid_transaction.get('category') or ['Other'])[0]
+                        user_category=user_category,
+                        is_recurring=is_recurring
                     )
                     db.add(transaction)
                     new_transactions += 1
                 else:
-                    # Update existing transaction if needed
+                    # Update existing transaction with fresh gambling detection and categorization
                     existing.name = plaid_transaction['name']
                     existing.amount = abs(float(plaid_transaction['amount']))
                     existing.plaid_category = ', '.join(plaid_transaction.get('category') or [])
+                    
+                    # Re-run gambling detection for existing transactions
+                    gambling_detection = get_gambling_detection_details(plaid_transaction)
+                    if gambling_detection.is_gambling:
+                        new_category = categorize_gambling_transaction(plaid_transaction)
+                        if existing.user_category != new_category:
+                            existing.user_category = new_category
+                            existing.is_recurring = False  # Gambling transactions are typically not recurring
+                            current_app.logger.info(f"Updated existing transaction category to gambling: {plaid_transaction['name']} - {new_category}")
+                    else:
+                        # Re-run intelligent categorization for non-gambling transactions
+                        categorization_result = categorize_transaction(plaid_transaction, user_transactions_for_categorization)
+                        new_category = categorization_result.category
+                        new_is_recurring = categorization_result.is_recurring
+                        
+                        if existing.user_category != new_category or existing.is_recurring != new_is_recurring:
+                            existing.user_category = new_category
+                            existing.is_recurring = new_is_recurring
+                            current_app.logger.info(f"Updated existing transaction: {plaid_transaction['name']} -> {new_category} (recurring: {new_is_recurring})")
+                    
                     updated_transactions += 1
             
             db.commit()
-            current_app.logger.info(f"Transaction sync completed for user {user_id}: {new_transactions} new, {updated_transactions} updated")
+            current_app.logger.info(f"Transaction sync completed for user {user_id}: {new_transactions} new, {updated_transactions} updated, {gambling_transactions_detected} gambling transactions detected")
             
     except Exception as e:
         current_app.logger.error(f"Transaction sync error for user {user_id}: {str(e)}")

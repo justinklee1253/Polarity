@@ -96,10 +96,10 @@ function SignupModal({ isOpen, onClose }) {
         name: `${formData.firstName.trim()} ${formData.lastName.trim()}`,
       };
 
-      console.log("Sending signup data:", {
-        ...signupData,
-        password: "[HIDDEN]",
-      });
+      // console.log("Sending signup data:", {
+      //   ...signupData,
+      //   password: "[HIDDEN]",
+      // });
 
       //API Call
 

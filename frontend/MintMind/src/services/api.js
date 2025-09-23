@@ -41,7 +41,7 @@ class ApiService {
         //if token expired --> marks that refresh in progress
         this.isRefreshing = true;
         try {
-          console.log("Attempting token refresh");
+          // console.log("Attempting token refresh");
           const refreshResult = await this.refreshToken(); //tries to refresh token
 
           if (refreshResult.data.access_token) {
@@ -73,7 +73,7 @@ class ApiService {
 
       return { data, response };
     } catch (error) {
-      console.log(`API request failed: `, error);
+      // console.log(`API request failed: `, error);
       throw error;
     }
   }

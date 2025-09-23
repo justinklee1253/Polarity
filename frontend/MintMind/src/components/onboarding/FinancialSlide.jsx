@@ -33,23 +33,23 @@ const FinancialSlide = ({ onComplete, onPrev, onDataUpdate, data }) => {
 
       // Exchange public_token for access_token (this also fetches and stores balance)
       const { data } = await exchangePublicToken(public_token);
-      console.log("Bank connected successfully. Balance:", data.total_balance);
+      // console.log("Bank connected successfully. Balance:", data.total_balance);
 
       // Give transaction sync a moment to complete
-      console.log("Allowing time for transaction sync...");
+      // console.log("Allowing time for transaction sync...");
       await new Promise((resolve) => setTimeout(resolve, 2000)); // Wait 2 seconds
 
       // Check if onboarding was completed by the backend
       if (data.onboarding_completed) {
         // Backend confirmed onboarding is complete - redirect immediately
-        console.log("Onboarding completed immediately via Plaid connection");
+        // console.log("Onboarding completed immediately via Plaid connection");
         await onComplete(true); // Pass flag to indicate immediate completion
       } else {
         // Backend says onboarding not complete yet - let polling handle it
-        console.log(
-          "Plaid connected but onboarding not complete:",
-          data.message
-        );
+        // console.log(
+        //   "Plaid connected but onboarding not complete:",
+        //   data.message
+        // );
         await onComplete(); // Trigger normal completion flow with polling
       }
     } catch (err) {
