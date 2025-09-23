@@ -8,11 +8,20 @@ import sys
 import ssl
 import os
 
+# Global flag to prevent multiple applications of the patch
+_SSL_FIX_APPLIED = False
+
 # Apply the fix immediately when this module is imported
 def apply_ssl_fix_immediate():
     """
     Apply SSL context fix immediately for Python 3.13 compatibility
     """
+    global _SSL_FIX_APPLIED
+    
+    if _SSL_FIX_APPLIED:
+        print("SSL fix already applied, skipping...")
+        return True
+        
     if sys.version_info >= (3, 13):
         try:
             # Import urllib3 modules
@@ -20,15 +29,20 @@ def apply_ssl_fix_immediate():
             import urllib3.poolmanager
             import urllib3.connectionpool
             
+            # Check if already patched to avoid recursion
+            if hasattr(urllib3.util.ssl_.create_urllib3_context, '_patched'):
+                print("SSL context already patched, skipping...")
+                _SSL_FIX_APPLIED = True
+                return True
+            
             # Store original functions
-            original_create_urllib3_context = urllib3.util.ssl_.create_urllib3_context
             original_connection_from_url = urllib3.poolmanager.PoolManager.connection_from_url
             
             def patched_create_urllib3_context(*args, **kwargs):
                 """
                 Create SSL context without triggering recursion error
                 """
-                # Create a default SSL context
+                # Create a default SSL context directly
                 context = ssl.create_default_context()
                 
                 # Set security options
@@ -51,11 +65,15 @@ def apply_ssl_fix_immediate():
                     kw['ssl_context'] = patched_create_urllib3_context()
                 return original_connection_from_url(self, url, **kw)
             
+            # Mark the function as patched to prevent re-patching
+            patched_create_urllib3_context._patched = True
+            
             # Apply patches
             urllib3.util.ssl_.create_urllib3_context = patched_create_urllib3_context
             urllib3.poolmanager.PoolManager.connection_from_url = patched_connection_from_url
             
             print("SSL fix applied successfully for Python 3.13")
+            _SSL_FIX_APPLIED = True
             return True
             
         except Exception as e:
@@ -63,6 +81,7 @@ def apply_ssl_fix_immediate():
             return False
     else:
         print("SSL fix not needed for Python < 3.13")
+        _SSL_FIX_APPLIED = True
         return True
 
 def apply_ssl_fix():
@@ -71,8 +90,9 @@ def apply_ssl_fix():
     """
     return apply_ssl_fix_immediate()
 
-# Apply the fix immediately when this module is imported
-apply_ssl_fix_immediate()
+# Note: SSL fix is NOT applied automatically to prevent Stripe recursion errors
+# Call apply_ssl_fix_immediate() manually only when needed for specific services
+# apply_ssl_fix_immediate()
 
 def create_plaid_ssl_context():
     """

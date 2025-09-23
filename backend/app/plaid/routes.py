@@ -64,18 +64,15 @@ configuration = plaid.Configuration(
     }
 )
 
-# Create API client with custom SSL configuration for Python 3.13 compatibility
-try:
-    # Try to use custom SSL context if available
-    if sys.version_info >= (3, 13):
-        try:
-            from ...ssl_fix import create_plaid_ssl_context
-            ssl_context = create_plaid_ssl_context()
-            # Note: Plaid client doesn't directly support SSL context, but this ensures our fix is applied
-        except ImportError:
-            pass
-except Exception as e:
-    print(f"Warning: Could not apply custom SSL context: {e}")
+# Apply SSL fix locally for Plaid only (Python 3.13 compatibility)
+if sys.version_info >= (3, 13):
+    try:
+        # Apply SSL fix only for this module to avoid global conflicts
+        from ...startup_ssl_fix import apply_startup_ssl_fix
+        apply_startup_ssl_fix()
+        print("Applied SSL fix for Plaid module")
+    except Exception as e:
+        print(f"Warning: Could not apply SSL fix for Plaid: {e}")
 
 api_client = plaid.ApiClient(configuration) #handle HTTP requests and responses
 client = plaid_api.PlaidApi(api_client) #Call methods on our client.

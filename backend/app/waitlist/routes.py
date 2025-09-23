@@ -19,7 +19,7 @@ from ..models import Waitlist
 stripe.api_key = os.getenv('STRIPE_SECRET_KEY')
 
 # Zapier webhook configuration
-ZAPIER_WEBHOOK_URL = os.getenv('ZAPIER_WEBHOOK_URL', 'https://hooks.zapier.com/hooks/catch/24722536/u1m84f5/')
+ZAPIER_WEBHOOK_URL = os.getenv('ZAPIER_WEBHOOK_URL')
 
 waitlist_bp = Blueprint('waitlist', __name__, url_prefix='/waitlist')
 
@@ -31,6 +31,10 @@ def validate_email(email):
 
 def send_to_zapier(email, event_type="waitlist_signup", additional_data=None):
     """Send email data to Zapier webhook"""
+    if not ZAPIER_WEBHOOK_URL:
+        current_app.logger.info("Zapier webhook URL not configured, skipping webhook")
+        return False
+        
     try:
         payload = {
             "email": email,
