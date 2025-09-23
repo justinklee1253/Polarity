@@ -92,6 +92,7 @@ def create_app():
     from .plaid.routes import plaid_bp
     from .transactions.routes import transactions_bp
     from .profile.routes import profile_bp
+    from .waitlist.routes import waitlist_bp
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(onboarding_bp)
@@ -99,6 +100,7 @@ def create_app():
     app.register_blueprint(plaid_bp)
     app.register_blueprint(transactions_bp)
     app.register_blueprint(profile_bp)
+    app.register_blueprint(waitlist_bp)
 
     socketio.init_app(app)
 

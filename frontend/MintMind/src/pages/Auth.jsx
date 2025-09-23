@@ -103,14 +103,40 @@ function Auth() {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [emailSignup, setEmailSignup] = useState("");
 
-  const handleEmailSignup = (e) => {
+  const handleEmailSignup = async (e) => {
     e.preventDefault();
     if (emailSignup) {
-      toast({
-        title: "Thank you!",
-        description: "We'll keep you updated on our progress.",
-      });
-      setEmailSignup("");
+      try {
+        const response = await fetch(
+          `${
+            import.meta.env.VITE_API_BASE_URL || "http://localhost:5001"
+          }/waitlist/signup`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ email: emailSignup }),
+          }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || "Failed to join waitlist");
+        }
+
+        // Redirect to thank you page with email parameter
+        navigate(`/thank-you?email=${encodeURIComponent(emailSignup)}`);
+      } catch (error) {
+        console.error("Waitlist signup error:", error);
+        toast({
+          title: "Error",
+          description:
+            error.message || "Failed to join waitlist. Please try again.",
+          variant: "destructive",
+        });
+      }
     }
   };
 

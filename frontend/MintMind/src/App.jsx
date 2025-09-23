@@ -12,6 +12,10 @@ import NotFound from "./pages/NotFound";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Reset from "./pages/Reset";
 import EditProfile from "./pages/EditProfile";
+// import Demo from "./pages/Demo";
+import ThankYou from "./pages/ThankYou";
+import PaymentSuccess from "./pages/PaymentSuccess";
+import PaymentGate from "./components/PaymentGate";
 
 const queryClient = new QueryClient();
 
@@ -23,13 +27,18 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Auth />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/demo" element={<Demo />} />
+          <Route path="/thank-you" element={<ThankYou />} />
+          <Route path="/payment-success" element={<PaymentSuccess />} />
           <Route
             path="/dashboard"
             element={
               <ProtectedRoute requireOnboardingComplete={true}>
-                <Layout>
-                  <Dashboard />
-                </Layout>
+                <PaymentGate requirePayment={true}>
+                  <Layout>
+                    <Dashboard />
+                  </Layout>
+                </PaymentGate>
               </ProtectedRoute>
             }
           />
@@ -37,9 +46,11 @@ const App = () => (
             path="/spark"
             element={
               <ProtectedRoute requireOnboardingComplete={true}>
-                <Layout>
-                  <Spark />
-                </Layout>
+                <PaymentGate requirePayment={true}>
+                  <Layout>
+                    <Spark />
+                  </Layout>
+                </PaymentGate>
               </ProtectedRoute>
             }
           />
@@ -47,9 +58,11 @@ const App = () => (
             path="/plan-budget"
             element={
               <ProtectedRoute requireOnboardingComplete={true}>
-                <Layout>
-                  <PlanBudget />
-                </Layout>
+                <PaymentGate requirePayment={true}>
+                  <Layout>
+                    <PlanBudget />
+                  </Layout>
+                </PaymentGate>
               </ProtectedRoute>
             }
           />
@@ -73,9 +86,11 @@ const App = () => (
             path="/edit-profile"
             element={
               <ProtectedRoute requireOnboardingComplete={true}>
-                <Layout>
-                  <EditProfile />
-                </Layout>
+                <PaymentGate requirePayment={true}>
+                  <Layout>
+                    <EditProfile />
+                  </Layout>
+                </PaymentGate>
               </ProtectedRoute>
             }
           />

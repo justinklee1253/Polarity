@@ -89,4 +89,15 @@ class Transaction(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     user = relationship("User", back_populates="transactions") 
+
+
+class Waitlist(Base):
+    __tablename__ = "waitlist"
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    email = Column(String, nullable=False, unique=True)
+    paid = Column(Boolean, default=False)
+    stripe_payment_intent_id = Column(String, nullable=True)  # Store Stripe payment intent ID
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    paid_at = Column(DateTime(timezone=True), nullable=True)
     
