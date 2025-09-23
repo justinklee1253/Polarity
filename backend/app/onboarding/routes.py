@@ -189,8 +189,14 @@ def update_onboarding_step(step):
                 user.financial_goals = json.dumps(financial_goals)
                 
             elif step == 6:
-                user.salary_monthly = int(request_data.get('salary_monthly', 0))
-                user.monthly_spending_goal = int(request_data.get('monthly_spending_goal', 0))
+                # Handle financial data more carefully to avoid defaulting to 0
+                salary = request_data.get('salary_monthly')
+                spending_goal = request_data.get('monthly_spending_goal')
+                
+                if salary is not None:
+                    user.salary_monthly = int(salary) if salary != 0 else 0
+                if spending_goal is not None:
+                    user.monthly_spending_goal = int(spending_goal) if spending_goal != 0 else 0
                 
                 # WEBHOOK TRIGGER: Check if onboarding can be completed after financial data update
                 completion_success, completion_message = trigger_onboarding_completion_check(user_id)

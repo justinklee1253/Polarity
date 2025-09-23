@@ -288,6 +288,75 @@ def update_transaction_details(transaction_id):
         current_app.logger.error(f"Error updating transaction {transaction_id}: {str(e)}")
         return jsonify({"error": f"Failed to update transaction: {str(e)}"}), 500
 
+@transactions_bp.route('/transactions/monthly-income', methods=['GET'])
+@jwt_required()
+def get_monthly_income():
+    """
+    Calculate monthly income based on actual income transactions
+    Returns the sum of all income transactions in the current month
+    """
+    user_id = get_jwt_identity()
+    
+    try:
+        with get_db_session() as db:
+            from datetime import datetime
+            from sqlalchemy import func, extract
+            
+            # Get current month and year
+            current_date = datetime.now()
+            current_month = current_date.month
+            current_year = current_date.year
+            
+            # Get all income transactions for current month
+            current_month_income = db.query(
+                func.sum(Transaction.amount).label('total_income')
+            ).filter(
+                Transaction.user_id == user_id,
+                Transaction.type == 'income',
+                extract('month', Transaction.date_posted) == current_month,
+                extract('year', Transaction.date_posted) == current_year
+            ).scalar()
+            
+            monthly_income = float(current_month_income) if current_month_income else 0
+            
+            # Also get count of income transactions for transparency
+            income_count = db.query(Transaction).filter(
+                Transaction.user_id == user_id,
+                Transaction.type == 'income',
+                extract('month', Transaction.date_posted) == current_month,
+                extract('year', Transaction.date_posted) == current_year
+            ).count()
+            
+            # Get sample income transactions for debugging
+            sample_transactions = db.query(Transaction).filter(
+                Transaction.user_id == user_id,
+                Transaction.type == 'income',
+                extract('month', Transaction.date_posted) == current_month,
+                extract('year', Transaction.date_posted) == current_year
+            ).limit(5).all()
+            
+            sample_data = []
+            for t in sample_transactions:
+                sample_data.append({
+                    'name': t.name,
+                    'amount': float(t.amount),
+                    'date': t.date_posted.isoformat(),
+                    'category': t.plaid_category
+                })
+            
+            return jsonify({
+                'monthly_income': round(monthly_income, 2),
+                'income_transactions_count': income_count,
+                'current_month': current_month,
+                'current_year': current_year,
+                'sample_transactions': sample_data,
+                'calculation_method': 'current_month_sum'
+            }), 200
+            
+    except Exception as e:
+        current_app.logger.error(f"Error calculating monthly income for user {user_id}: {str(e)}")
+        return jsonify({"error": f"Failed to calculate monthly income: {str(e)}"}), 500
+
 @transactions_bp.route('/transactions/sync', methods=['POST'])
 @jwt_required()
 def sync_transactions_manual():

@@ -11,6 +11,7 @@ import Onboarding from "./pages/Onboarding";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Reset from "./pages/Reset";
+import EditProfile from "./pages/EditProfile";
 
 const queryClient = new QueryClient();
 
@@ -65,6 +66,16 @@ const App = () => (
             element={
               <ProtectedRoute requireOnboardingComplete={true}>
                 <Reset />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/edit-profile"
+            element={
+              <ProtectedRoute requireOnboardingComplete={true}>
+                <Layout>
+                  <EditProfile />
+                </Layout>
               </ProtectedRoute>
             }
           />

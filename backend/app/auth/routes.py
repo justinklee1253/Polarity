@@ -186,6 +186,35 @@ def logout():
 def get_current_user():
     user_id = get_jwt_identity() #returns identity of JWT accessing this endpoint. 
     
+    def calculate_monthly_income_from_transactions(user_id):
+        """Calculate monthly income based on actual transactions for current month"""
+        try:
+            from datetime import datetime
+            from sqlalchemy import func, extract
+            from ..models import Transaction
+            
+            with get_db_session() as db:
+                # Get current month and year
+                current_date = datetime.now()
+                current_month = current_date.month
+                current_year = current_date.year
+                
+                # Get all income transactions for current month
+                current_month_income = db.query(
+                    func.sum(Transaction.amount).label('total_income')
+                ).filter(
+                    Transaction.user_id == user_id,
+                    Transaction.type == 'income',
+                    extract('month', Transaction.date_posted) == current_month,
+                    extract('year', Transaction.date_posted) == current_year
+                ).scalar()
+                
+                return float(current_month_income) if current_month_income else 0
+                    
+        except Exception as e:
+            current_app.logger.error(f"Error calculating monthly income: {str(e)}")
+            return 0
+    
     with get_db_session() as db:
         user = db.query(User).get(user_id)
         if not user:
@@ -194,6 +223,10 @@ def get_current_user():
             financial_goals = json.loads(user.financial_goals) if user.financial_goals not in (None, '', 'null') else []
         except Exception:
             financial_goals = []
+            
+        # Calculate monthly income from transactions instead of using static field
+        calculated_monthly_income = calculate_monthly_income_from_transactions(user_id)
+        
         return jsonify({
             "user_id": user.id,
             "name": user.name,
@@ -202,8 +235,8 @@ def get_current_user():
             "onboarding_completed": user.onboarding_completed,
             "onboarding_step": user.onboarding_step,
             "budget_profile": {
-                "salary_monthly": user.salary_monthly,
-                "monthly_spending_goal": user.monthly_spending_goal,
+                "salary_monthly": calculated_monthly_income,  # Use calculated value instead of static
+                "monthly_spending_goal": user.monthly_spending_goal,  # Keep onboarding value
                 "total_balance": user.total_balance,
             },
             "profile_info": {

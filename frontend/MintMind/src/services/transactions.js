@@ -45,6 +45,21 @@ export async function getTransactions(params = {}) {
 }
 
 /**
+ * Get calculated monthly income based on actual income transactions
+ * @returns {Promise<Object>} Response with monthly income calculation
+ */
+export async function getMonthlyIncome() {
+  const token = localStorage.getItem("access_token");
+
+  return apiService.request("/transactions/monthly-income", {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+}
+
+/**
  * Get all unique categories used by the user's transactions
  * @returns {Promise<Object>} Response with categories array and count
  */

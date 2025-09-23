@@ -74,18 +74,8 @@ export function AppSidebar() {
     }
   };
 
-  const handleProfileView = () => {
-    toast({
-      title: "Profile View",
-      description: "Profile view feature coming soon!",
-    });
-  };
-
   const handleProfileEdit = () => {
-    toast({
-      title: "Edit Profile",
-      description: "Edit profile feature coming soon!",
-    });
+    navigate("/edit-profile");
   };
 
   const isCollapsed = state === "collapsed";
@@ -118,7 +108,10 @@ export function AppSidebar() {
               <TooltipProvider delayDuration={0}>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <div className="w-12 h-12 flex items-center justify-center rounded-xl hover:bg-white/10 cursor-pointer mt-4 transition-all duration-300 hover:scale-105 group">
+                    <div
+                      className="w-12 h-12 flex items-center justify-center rounded-xl hover:bg-white/10 cursor-pointer mt-4 transition-all duration-300 hover:scale-105 group"
+                      onClick={handleProfileEdit}
+                    >
                       <Avatar className="h-8 w-8 group-hover:scale-110 transition-transform duration-300">
                         <AvatarFallback className="bg-gradient-to-br from-emerald-500 to-cyan-500 text-white text-sm border-2 border-white/20">
                           <UserRound className="h-4 w-4" />
@@ -130,7 +123,7 @@ export function AppSidebar() {
                     side="right"
                     className="ml-2 bg-slate-800 border-white/10 text-white"
                   >
-                    Profile Settings
+                    Edit Profile
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -266,13 +259,6 @@ export function AppSidebar() {
                   align="end"
                   className="w-48 backdrop-blur-xl bg-slate-900/90 border border-white/10 shadow-2xl"
                 >
-                  <DropdownMenuItem
-                    onClick={handleProfileView}
-                    className="text-slate-300 hover:text-white hover:bg-white/10 transition-colors duration-300"
-                  >
-                    <UserRound className="h-4 w-4 mr-2" />
-                    View Profile
-                  </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={handleProfileEdit}
                     className="text-slate-300 hover:text-white hover:bg-white/10 transition-colors duration-300"
