@@ -28,6 +28,8 @@ import {
   BarChart3,
   Target,
 } from "lucide-react";
+import { ShootingStars } from "@/components/ui/shooting-stars";
+import { StarsBackground } from "@/components/ui/stars-background";
 // Import images from assets
 import plaidImg from "@/assets/images/plaidboo2.png";
 import openaiImg from "@/assets/images/openai-icon.png";
@@ -43,27 +45,6 @@ function Auth() {
   const [focusedField, setFocusedField] = useState(null);
   const [isValid, setIsValid] = useState({ email: false, password: false });
   const navigate = useNavigate();
-
-  // Animated background particles
-  const [particles, setParticles] = useState([]);
-
-  useEffect(() => {
-    const generateParticles = () => {
-      const newParticles = [];
-      for (let i = 0; i < 50; i++) {
-        newParticles.push({
-          id: i,
-          x: Math.random() * 100,
-          y: Math.random() * 100,
-          size: Math.random() * 3 + 1,
-          duration: Math.random() * 20 + 10,
-          delay: Math.random() * 5,
-        });
-      }
-      setParticles(newParticles);
-    };
-    generateParticles();
-  }, []);
 
   // Form validation
   useEffect(() => {
@@ -135,39 +116,14 @@ function Auth() {
 
   return (
     <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-900">
-      {/* Animated Background Particles */}
-      <div className="absolute inset-0 overflow-hidden">
-        {particles.map((particle) => (
-          <div
-            key={particle.id}
-            className="absolute rounded-full bg-gradient-to-r from-emerald-400/20 to-cyan-400/20 animate-pulse"
-            style={{
-              left: `${particle.x}%`,
-              top: `${particle.y}%`,
-              width: `${particle.size}px`,
-              height: `${particle.size}px`,
-              animationDuration: `${particle.duration}s`,
-              animationDelay: `${particle.delay}s`,
-            }}
-          />
-        ))}
-      </div>
+      {/* Star Background */}
+      <StarsBackground />
+
+      {/* Shooting Stars */}
+      <ShootingStars />
 
       {/* Gradient Overlay */}
       <div className="absolute inset-0 bg-gradient-to-br from-slate-900/50 via-transparent to-emerald-900/30" />
-
-      {/* Floating geometric shapes */}
-      <div className="absolute inset-0">
-        <div
-          className="absolute top-20 left-10 w-32 h-32 border border-emerald-500/10 rounded-full animate-spin"
-          style={{ animationDuration: "20s" }}
-        />
-        <div
-          className="absolute bottom-20 right-10 w-24 h-24 border border-cyan-500/10 rounded-lg animate-bounce"
-          style={{ animationDuration: "3s" }}
-        />
-        <div className="absolute top-1/2 left-5 w-16 h-16 border border-emerald-400/10 rotate-45 animate-pulse" />
-      </div>
 
       <div className="relative z-10">
         {/* Navigation */}
@@ -206,29 +162,6 @@ function Auth() {
                 better habits with AI-powered insights that understand your
                 spending patterns.
               </p>
-            </div>
-
-            {/* Waitlist Signup Form */}
-            <div className="max-w-lg mx-auto">
-              <form
-                onSubmit={handleEmailSignup}
-                className="flex flex-col sm:flex-row gap-4"
-              >
-                <Input
-                  type="email"
-                  placeholder="Enter your email address"
-                  value={emailSignup}
-                  onChange={(e) => setEmailSignup(e.target.value)}
-                  className="flex-1 h-14 bg-white/10 border border-white/20 text-white placeholder:text-slate-400 rounded-lg backdrop-blur-sm focus:border-emerald-400/50 focus:ring-2 focus:ring-emerald-400/20 transition-all text-lg px-6"
-                  required
-                />
-                <Button
-                  type="submit"
-                  className="bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white px-8 h-14 rounded-lg transition-all duration-300 transform hover:scale-[1.02] font-semibold border-0 text-lg whitespace-nowrap"
-                >
-                  Join Waitlist!
-                </Button>
-              </form>
             </div>
 
             {/* Powered by section */}
@@ -390,32 +323,36 @@ function Auth() {
         </section>
 
         {/* Additional CTA Section */}
-        <section className="max-w-4xl mx-auto px-6 py-20">
-          <div className="backdrop-blur-xl bg-gradient-to-r from-emerald-500/10 to-cyan-500/10 border border-emerald-500/20 rounded-3xl p-12 text-center">
-            <h3 className="text-3xl font-bold text-white mb-4">
-              Ready to take control?
-            </h3>
-            <p className="text-xl text-slate-300 mb-8 max-w-2xl mx-auto">
-              Join thousands of users who have already transformed their
-              relationship with money.
-            </p>
+        <section className="max-w-4xl mx-auto px-6 py-20 text-center">
+          <h3 className="text-3xl font-bold text-white mb-4">
+            Ready to take control?
+          </h3>
+          <p className="text-xl text-slate-300 mb-8 max-w-2xl mx-auto">
+            You're about to be one step closer to smarter financial habits and
+            better money management.
+          </p>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+          {/* Waitlist Signup Form */}
+          <div className="max-w-lg mx-auto">
+            <form
+              onSubmit={handleEmailSignup}
+              className="flex flex-col sm:flex-row gap-4"
+            >
+              <Input
+                type="email"
+                placeholder="Enter your email address"
+                value={emailSignup}
+                onChange={(e) => setEmailSignup(e.target.value)}
+                className="flex-1 h-14 bg-white/10 border border-white/20 text-white placeholder:text-slate-400 rounded-lg backdrop-blur-sm focus:border-emerald-400/50 focus:ring-2 focus:ring-emerald-400/20 transition-all text-lg px-6"
+                required
+              />
               <Button
-                onClick={() => setShowSignup(true)}
-                className="bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white font-semibold px-8 py-3.5 text-lg rounded-lg transition-all duration-300 transform hover:scale-[1.02] hover:shadow-xl hover:shadow-emerald-500/20 group border-0"
+                type="submit"
+                className="bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white px-8 h-14 rounded-lg transition-all duration-300 transform hover:scale-[1.02] font-semibold border-0 text-lg whitespace-nowrap"
               >
-                Get Started Free
-                <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                Join Waitlist!
               </Button>
-              <button
-                onClick={() => setShowLoginModal(true)}
-                className="relative text-white font-medium px-8 py-3.5 text-lg transition-all duration-300 group"
-              >
-                Already have an account? Login
-                <div className="absolute bottom-2 left-1/2 w-0 h-0.5 bg-gradient-to-r from-emerald-400 to-cyan-400 transition-all duration-300 group-hover:w-3/4 group-hover:left-1/8"></div>
-              </button>
-            </div>
+            </form>
           </div>
         </section>
 
