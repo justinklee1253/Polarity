@@ -26,11 +26,11 @@ import hmac
 
 # Apply SSL fix for Python 3.13 compatibility
 try:
-    from ...ssl_fix import apply_ssl_fix, create_plaid_ssl_context
-    apply_ssl_fix()
+    from ...startup_ssl_fix import apply_startup_ssl_fix
+    apply_startup_ssl_fix()
 except ImportError:
-    # Fallback if ssl_fix module is not available
-    print("Warning: SSL fix module not found in plaid routes, using fallback")
+    # Fallback if startup_ssl_fix module is not available
+    print("Warning: Startup SSL fix module not found in plaid routes, using fallback")
     if sys.version_info >= (3, 13):
         import urllib3.util.ssl_
         

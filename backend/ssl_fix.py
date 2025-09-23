@@ -8,12 +8,14 @@ import sys
 import ssl
 import os
 
-def apply_ssl_fix():
+# Apply the fix immediately when this module is imported
+def apply_ssl_fix_immediate():
     """
-    Apply SSL context fix for Python 3.13 compatibility
+    Apply SSL context fix immediately for Python 3.13 compatibility
     """
     if sys.version_info >= (3, 13):
         try:
+            # Import urllib3 modules
             import urllib3.util.ssl_
             import urllib3.poolmanager
             import urllib3.connectionpool
@@ -39,9 +41,6 @@ def apply_ssl_fix():
                 context.options |= ssl.OP_NO_TLSv1
                 context.options |= ssl.OP_NO_TLSv1_1
                 
-                # Set minimum protocol version using options instead of minimum_version
-                context.options |= ssl.OP_NO_TLSv1_1
-                
                 return context
             
             def patched_connection_from_url(self, url, **kw):
@@ -65,6 +64,15 @@ def apply_ssl_fix():
     else:
         print("SSL fix not needed for Python < 3.13")
         return True
+
+def apply_ssl_fix():
+    """
+    Apply SSL context fix for Python 3.13 compatibility
+    """
+    return apply_ssl_fix_immediate()
+
+# Apply the fix immediately when this module is imported
+apply_ssl_fix_immediate()
 
 def create_plaid_ssl_context():
     """

@@ -1,23 +1,11 @@
-import os
+# Apply SSL fix FIRST, before any other imports
 import sys
-from flask import Flask, jsonify
-from flask_cors import CORS
-from .config import Config
-from .database import test_db_connection
-from dotenv import load_dotenv
-from flask_jwt_extended import JWTManager
-from .extensions import blacklist
-
-from flask_socketio import SocketIO
-
-# Apply SSL fix for Python 3.13 compatibility
-try:
-    from ..ssl_fix import apply_ssl_fix
-    apply_ssl_fix()
-except ImportError:
-    # Fallback if ssl_fix module is not available
-    print("Warning: SSL fix module not found, using fallback")
-    if sys.version_info >= (3, 13):
+if sys.version_info >= (3, 13):
+    try:
+        from ..startup_ssl_fix import apply_startup_ssl_fix
+        apply_startup_ssl_fix()
+    except ImportError:
+        print("Warning: Startup SSL fix module not found, using fallback")
         import ssl
         import urllib3.util.ssl_
         
@@ -32,6 +20,17 @@ except ImportError:
             return context
         
         urllib3.util.ssl_.create_urllib3_context = patched_create_urllib3_context
+
+import os
+from flask import Flask, jsonify
+from flask_cors import CORS
+from .config import Config
+from .database import test_db_connection
+from dotenv import load_dotenv
+from flask_jwt_extended import JWTManager
+from .extensions import blacklist
+
+from flask_socketio import SocketIO
 
 blacklist = set()
 # SocketIO CORS - environment-based (default to * for local dev, restrict in production)
