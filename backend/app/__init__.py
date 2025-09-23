@@ -16,7 +16,11 @@ from flask_socketio import SocketIO
 blacklist = set()
 # SocketIO CORS - environment-based (default to * for local dev, restrict in production)
 socketio_cors_origins = os.getenv('SOCKETIO_CORS_ORIGINS', '*')
-socketio = SocketIO(cors_allowed_origins=socketio_cors_origins)
+# Configure SocketIO for gevent compatibility (used in production with gunicorn)
+socketio = SocketIO(
+    cors_allowed_origins=socketio_cors_origins,
+    async_mode='gevent'  # Explicitly use gevent for production compatibility
+)
 
 def create_app():
     """

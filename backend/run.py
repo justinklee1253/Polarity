@@ -1,10 +1,12 @@
-# Note: SSL fixes removed from global startup to prevent Stripe recursion errors
-# SSL fixes will be applied only when needed for specific services (like Plaid)
+# Production-ready startup without SSL patches
 import sys
+import os
+from dotenv import load_dotenv
+
+# For gevent compatibility (used with gunicorn --worker-class gevent)
+# Note: gevent monkey patching is handled by gunicorn when using gevent worker class
 
 from app import create_app, socketio
-from dotenv import load_dotenv
-import os
 
 # Load environment variables
 load_dotenv()

@@ -24,27 +24,7 @@ from datetime import datetime, date
 import hashlib
 import hmac
 
-# # Apply SSL fix for Python 3.13 compatibility
-# try:
-#     from ...startup_ssl_fix import apply_startup_ssl_fix
-#     apply_startup_ssl_fix()
-# except ImportError:
-#     # Fallback if startup_ssl_fix module is not available
-#     print("Warning: Startup SSL fix module not found in plaid routes, using fallback")
-#     if sys.version_info >= (3, 13):
-#         import urllib3.util.ssl_
-        
-#         def patched_create_urllib3_context(*args, **kwargs):
-#             context = ssl.create_default_context()
-#             context.check_hostname = True
-#             context.verify_mode = ssl.CERT_REQUIRED
-#             context.options |= ssl.OP_NO_SSLv2
-#             context.options |= ssl.OP_NO_SSLv3
-#             context.options |= ssl.OP_NO_TLSv1
-#             context.options |= ssl.OP_NO_TLSv1_1
-#             return context
-        
-#         urllib3.util.ssl_.create_urllib3_context = patched_create_urllib3_context
+# Note: SSL patches completely removed - both Plaid and Stripe SDKs handle SSL automatically
 
 plaid_bp = Blueprint('plaid', __name__, url_prefix='/plaid')
 
@@ -64,18 +44,7 @@ configuration = plaid.Configuration(
     }
 )
 
-# # Create API client with custom SSL configuration for Python 3.13 compatibility
-# try:
-#     # Try to use custom SSL context if available
-#     if sys.version_info >= (3, 13):
-#         try:
-#             from ...ssl_fix import create_plaid_ssl_context
-#             ssl_context = create_plaid_ssl_context()
-#             # Note: Plaid client doesn't directly support SSL context, but this ensures our fix is applied
-#         except ImportError:
-#             pass
-# except Exception as e:
-#     print(f"Warning: Could not apply custom SSL context: {e}")
+# Note: Plaid SDK handles SSL/TLS automatically - no custom configuration needed
 
 api_client = plaid.ApiClient(configuration) #handle HTTP requests and responses
 client = plaid_api.PlaidApi(api_client) #Call methods on our client.
