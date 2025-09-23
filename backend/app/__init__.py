@@ -23,7 +23,12 @@ def create_app():
 
     """
     app = Flask(__name__)
-    app.config.from_object(Config)
+    
+    # Choose configuration based on environment
+    if os.getenv('FLASK_ENV') == 'production':
+        app.config.from_object('app.config.ProductionConfig')
+    else:
+        app.config.from_object('app.config.DevelopmentConfig')
 
     # CORS configuration - environment-based
     allowed_origins = os.getenv('CORS_ORIGINS', 'http://localhost:5173').split(',')

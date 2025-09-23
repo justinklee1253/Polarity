@@ -9,11 +9,12 @@ load_dotenv()
 app = create_app()
 
 if __name__ == '__main__':
-    # Run the development server
+    port = int(os.getenv('PORT', 5001))  # Render provides PORT env var
     debug_mode = os.getenv('FLASK_ENV') == 'development'
+
     socketio.run(
         app,
         host='0.0.0.0',
-        port=int(os.getenv('PORT', 5001)),  # Changed to 5001
+        port=port,
         debug=debug_mode
     )

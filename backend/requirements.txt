@@ -8,3 +8,7 @@ pyjwt
 flask-jwt-extended
 pytest
 flask-cors
+gunicorn
+plaid-python
+openai
+flask-socketio

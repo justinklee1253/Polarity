@@ -11,6 +11,15 @@ load_dotenv()
 
 SQLALCHEMY_DATABASE_URL = os.getenv('DATABASE_URL')
 # print(f"Database URL: {SQLALCHEMY_DATABASE_URL}") #DEBUG LINE - Commented out for security
+
+# Add SSL mode for production database connections
+if os.getenv('FLASK_ENV') == 'production':
+    # Ensure SSL is required for production database connections
+    if '?' in SQLALCHEMY_DATABASE_URL:
+        SQLALCHEMY_DATABASE_URL += '&sslmode=require'
+    else:
+        SQLALCHEMY_DATABASE_URL += '?sslmode=require'
+
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine) #allows the Session factory to be used by multiple functions
 
