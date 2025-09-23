@@ -17,35 +17,33 @@ from ..database import get_db_session
 from ..models import Waitlist
 
 # Apply SSL fix specifically for Stripe in Python 3.13
+# Apply SSL fix specifically for Stripe in Python 3.13
 if sys.version_info >= (3, 13):
     try:
         import urllib3.util.ssl_
         import ssl
-        
-        # Check if already patched to avoid recursion
-        if not hasattr(urllib3.util.ssl_.create_urllib3_context, '_stripe_patched'):
-            # Store original function
+
+        # Only patch once
+        if not getattr(urllib3.util.ssl_.create_urllib3_context, "_stripe_patched", False):
             original_create_urllib3_context = urllib3.util.ssl_.create_urllib3_context
-            
+
             def stripe_safe_create_urllib3_context(*args, **kwargs):
-                """Create SSL context without triggering recursion for Stripe"""
+                """Safe SSL context for Stripe to prevent recursion errors"""
                 try:
-                    # Try the original function first
                     return original_create_urllib3_context(*args, **kwargs)
                 except RecursionError:
-                    # Fallback to direct SSL context creation
+                    # Instead of retrying original (which caused recursion), fallback cleanly
                     context = ssl.create_default_context()
                     context.check_hostname = True
                     context.verify_mode = ssl.CERT_REQUIRED
                     return context
-            
-            # Mark as patched and apply
+
             stripe_safe_create_urllib3_context._stripe_patched = True
             urllib3.util.ssl_.create_urllib3_context = stripe_safe_create_urllib3_context
-            print("Applied Stripe SSL fix for Python 3.13")
-            
+            print("✅ Applied Stripe SSL fix for Python 3.13")
     except Exception as e:
-        print(f"Could not apply Stripe SSL fix: {e}")
+        print(f"⚠️ Could not apply Stripe SSL fix: {e}")
+
 
 # Initialize Stripe
 stripe.api_key = os.getenv('STRIPE_SECRET_KEY')
