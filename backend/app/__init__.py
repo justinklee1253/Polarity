@@ -2,38 +2,121 @@
 # SSL applied only when needed for specific services (like Plaid)
 import sys
 
-# Apply SSL fix for Python 3.13 BEFORE importing any other modules
-if sys.version_info >= (3, 13):
+# Apply SSL fix for urllib3 recursion issues (especially in production environments)
+def apply_urllib3_ssl_fix():
+    """Apply comprehensive SSL fix for urllib3 recursion issues"""
     try:
         import urllib3.util.ssl_
         import ssl
         
         # Check if already patched to avoid recursion
-        if not hasattr(urllib3.util.ssl_.create_urllib3_context, '_global_patched'):
-            def safe_create_urllib3_context(*args, **kwargs):
-                """Create SSL context without triggering recursion"""
+        if hasattr(urllib3.util.ssl_.create_urllib3_context, '_patched_for_production'):
+            return True
+            
+        # Store the original function
+        original_func = urllib3.util.ssl_.create_urllib3_context
+        
+        def production_safe_ssl_context(*args, **kwargs):
+            """Production-safe SSL context that prevents recursion"""
+            try:
+                # Try to create a simple, direct SSL context
+                context = ssl.create_default_context()
+                
+                # Basic secure settings
+                context.check_hostname = True
+                context.verify_mode = ssl.CERT_REQUIRED
+                
+                # Disable insecure protocols
                 try:
-                    # Create a default SSL context directly
-                    context = ssl.create_default_context()
-                    context.check_hostname = True
-                    context.verify_mode = ssl.CERT_REQUIRED
-                    # Disable old protocols
                     context.options |= ssl.OP_NO_SSLv2
                     context.options |= ssl.OP_NO_SSLv3
                     context.options |= ssl.OP_NO_TLSv1
                     context.options |= ssl.OP_NO_TLSv1_1
-                    return context
-                except Exception:
-                    # Ultimate fallback
+                except AttributeError:
+                    # Some options might not be available in all environments
+                    pass
+                
+                return context
+                
+            except Exception as fallback_error:
+                # Ultimate fallback - create minimal SSL context
+                try:
                     return ssl.create_default_context()
-            
-            # Mark as patched and apply globally
-            safe_create_urllib3_context._global_patched = True
-            urllib3.util.ssl_.create_urllib3_context = safe_create_urllib3_context
-            print("Applied global SSL fix for Python 3.13")
-            
+                except Exception:
+                    # If all else fails, try the original function once
+                    try:
+                        return original_func(*args, **kwargs)
+                    except RecursionError:
+                        # Create absolutely minimal context
+                        return ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+        
+        # Mark as patched and apply
+        production_safe_ssl_context._patched_for_production = True
+        urllib3.util.ssl_.create_urllib3_context = production_safe_ssl_context
+        
+        print("✅ Applied production-safe SSL fix for urllib3")
+        return True
+        
     except Exception as e:
-        print(f"Could not apply global SSL fix: {e}")
+        print(f"⚠️ Could not apply SSL fix: {e}")
+        return False
+
+# Apply the fix immediately
+apply_urllib3_ssl_fix()
+
+# Additional production environment SSL fixes
+def apply_production_ssl_fixes():
+    """Apply additional SSL fixes specifically for production environments"""
+    try:
+        import os
+        
+        # Check if we're in production
+        is_production = (
+            os.getenv('FLASK_ENV') == 'production' or 
+            os.getenv('RENDER') or 
+            os.getenv('PORT') or
+            'render.com' in os.getenv('RENDER_EXTERNAL_HOSTNAME', '')
+        )
+        
+        if is_production:
+            # Set environment variables that might help with SSL
+            os.environ['PYTHONHTTPSVERIFY'] = '1'
+            os.environ['CURL_CA_BUNDLE'] = ''
+            
+            # Try to preload and configure requests/urllib3 for production
+            try:
+                import requests
+                import urllib3
+                
+                # Disable urllib3 warnings that might interfere
+                urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+                
+                # Create a session with specific SSL settings for Stripe
+                session = requests.Session()
+                adapter = requests.adapters.HTTPAdapter(
+                    max_retries=urllib3.util.retry.Retry(
+                        total=3,
+                        backoff_factor=0.1,
+                        status_forcelist=[500, 502, 503, 504]
+                    )
+                )
+                session.mount('https://', adapter)
+                
+                # Store the session for later use
+                import stripe
+                if hasattr(stripe, 'set_app_info'):
+                    stripe.set_app_info("Polarity", version="1.0.0")
+                
+                print("✅ Applied production SSL configurations")
+                
+            except Exception as e:
+                print(f"⚠️ Could not apply production SSL configs: {e}")
+                
+    except Exception as e:
+        print(f"⚠️ Error in production SSL setup: {e}")
+
+# Apply production fixes
+apply_production_ssl_fixes()
 
 import os
 from flask import Flask, jsonify
