@@ -173,10 +173,16 @@ def create_checkout_session():
 def create_monthly_checkout_session():
     """Create Stripe checkout session for monthly plan"""
     try:
+        # Add debug logging
+        current_app.logger.info("Monthly checkout session creation started")
+        
         data = request.get_json()
         email = data.get('email', '').strip().lower()
         
+        current_app.logger.info(f"Processing monthly checkout for email: {email}")
+        
         if not email or not validate_email(email):
+            current_app.logger.error(f"Invalid email: {email}")
             return jsonify({"error": "Valid email is required"}), 400
         
         with get_db_session() as db:
@@ -191,8 +197,11 @@ def create_monthly_checkout_session():
             
             # Get base URL for redirects
             frontend_url = os.getenv('FRONTEND_URL', 'http://localhost:5173')
+            current_app.logger.info(f"Frontend URL: {frontend_url}")
+            current_app.logger.info(f"Stripe API key configured: {bool(stripe.api_key)}")
             
             # Create Stripe checkout session for monthly plan
+            current_app.logger.info("About to call Stripe checkout session create")
             session = stripe.checkout.Session.create(
                 payment_method_types=['card'],
                 line_items=[{
@@ -226,8 +235,15 @@ def create_monthly_checkout_session():
                 "url": session.url
             }), 200
             
+    except stripe.error.StripeError as e:
+        current_app.logger.error(f"Stripe error in monthly checkout: {str(e)}")
+        current_app.logger.error(f"Stripe error type: {type(e).__name__}")
+        return jsonify({"error": f"Stripe error: {str(e)}"}), 500
     except Exception as e:
         current_app.logger.error(f"Monthly checkout session creation error: {str(e)}")
+        current_app.logger.error(f"Error type: {type(e).__name__}")
+        import traceback
+        current_app.logger.error(f"Full traceback: {traceback.format_exc()}")
         return jsonify({"error": "Failed to create monthly checkout session"}), 500
 
 @waitlist_bp.route('/confirm-payment', methods=['POST'])
