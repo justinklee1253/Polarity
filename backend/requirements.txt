@@ -12,3 +12,6 @@ gunicorn
 plaid-python
 openai
 flask-socketio
+eventlet
+gevent 
+gevent-websocket
