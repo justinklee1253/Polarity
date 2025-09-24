@@ -150,3 +150,8 @@ __pycache__/
 # frontend/MintMind/public/*.png
 # frontend/MintMind/public/*.jpg
 # frontend/MintMind/public/*.jpeg
+
+# Documentation and setup files (sensitive information)
+PAYWALL_SETUP.md
+PRODUCTION_DEPLOYMENT_GUIDE.md
+start_backend.sh

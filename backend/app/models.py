@@ -97,6 +97,7 @@ class Waitlist(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     email = Column(String, nullable=False, unique=True)
     paid = Column(Boolean, default=False)
+    payment_plan = Column(String(50), nullable=True) #lifetime, monthly or NULL
     stripe_payment_intent_id = Column(String, nullable=True)  # Store Stripe payment intent ID
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     paid_at = Column(DateTime(timezone=True), nullable=True)

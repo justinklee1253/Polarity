@@ -23,6 +23,23 @@ ZAPIER_WEBHOOK_URL = os.getenv('ZAPIER_WEBHOOK_URL')
 
 waitlist_bp = Blueprint('waitlist', __name__, url_prefix='/waitlist')
 
+def get_waitlist_segments(db):
+    """Helper function to get different user segments for email campaigns"""
+    segments = {
+        'all_waitlist': db.query(Waitlist).all(),
+        'paid_users': db.query(Waitlist).filter(Waitlist.paid == True).all(),
+        'lifetime_users': db.query(Waitlist).filter(
+            Waitlist.paid == True, 
+            Waitlist.payment_plan == 'lifetime'
+        ).all(),
+        'monthly_users': db.query(Waitlist).filter(
+            Waitlist.paid == True, 
+            Waitlist.payment_plan == 'monthly'
+        ).all(),
+        'free_members': db.query(Waitlist).filter(Waitlist.paid == False).all()
+    }
+    return segments
+
 def validate_email(email):
     """Basic email validation"""
     import re
@@ -276,6 +293,7 @@ def confirm_payment():
             # Update payment status
             waitlist_entry.paid = True
             waitlist_entry.paid_at = datetime.now()
+            waitlist_entry.payment_plan = session.metadata.get('plan')  # 'lifetime' or 'monthly'
             db.commit()
             
             # Send payment confirmation to Zapier
@@ -313,13 +331,15 @@ def check_status(email):
                 return jsonify({
                     "email": email,
                     "in_waitlist": False,
-                    "paid": False
+                    "paid": False,
+                    "payment_plan": None
                 }), 200
             
             return jsonify({
                 "email": email,
                 "in_waitlist": True,
                 "paid": waitlist_entry.paid,
+                "payment_plan": waitlist_entry.payment_plan,
                 "created_at": waitlist_entry.created_at.isoformat() if waitlist_entry.created_at else None,
                 "paid_at": waitlist_entry.paid_at.isoformat() if waitlist_entry.paid_at else None
             }), 200
@@ -327,3 +347,25 @@ def check_status(email):
     except Exception as e:
         current_app.logger.error(f"Status check error: {str(e)}")
         return jsonify({"error": "Failed to check status"}), 500
+
+@waitlist_bp.route('/stats', methods=['GET'])
+def get_waitlist_stats():
+    """Get waitlist statistics for email campaign planning"""
+    try:
+        with get_db_session() as db:
+            segments = get_waitlist_segments(db)
+            
+            stats = {
+                'total_waitlist': len(segments['all_waitlist']),
+                'paid_users': len(segments['paid_users']),
+                'lifetime_users': len(segments['lifetime_users']),
+                'monthly_users': len(segments['monthly_users']),
+                'free_members': len(segments['free_members']),
+                'conversion_rate': round(len(segments['paid_users']) / len(segments['all_waitlist']) * 100, 2) if segments['all_waitlist'] else 0
+            }
+            
+            return jsonify(stats), 200
+            
+    except Exception as e:
+        current_app.logger.error(f"Stats error: {str(e)}")
+        return jsonify({"error": "Failed to get stats"}), 500
